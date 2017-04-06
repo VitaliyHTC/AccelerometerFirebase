@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "614583456426",
+    "firebase_url": "https://accelerometerfirebase-67427.firebaseio.com",
+    "project_id": "accelerometerfirebase-67427",
+    "storage_bucket": "accelerometerfirebase-67427.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614583456426:android:09fcb4cdb60c89cd",
+        "android_client_info": {
+          "package_name": "com.vitaliyhtc.accelerometerfirebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "614583456426-igt5omi9iheem63nnaf70tnq4urklf65.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vitaliyhtc.accelerometerfirebase",
+            "certificate_hash": "9fd1b815fe912ba426fe959911e8f72a64c45115"
+          }
+        },
+        {
+          "client_id": "614583456426-9ignbo13rj87al60ki429ijejtkfdhfs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqFDODvn32Y7oWFWt0vT0SVZ6zxZPtlQg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "614583456426-9ignbo13rj87al60ki429ijejtkfdhfs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">AccelerometerFirebase</string>
+
+    <string name="sign_in">Sign In</string>
+
+    <string name="main_btn_start">Start</string>
+    <string name="main_btn_stop">Stop</string>
+    <string name="main_btn_show_as_list">List</string>
+    <string name="main_btn_show_as_graph">Graph</string>
+    <string name="main_tv_show_as">Show as:</string>
+    <string name="sign_out">Sign Out</string>
 </resources>
