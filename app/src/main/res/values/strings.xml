@@ -24,4 +24,14 @@
     <string name="pref_app_session_length">Session length</string>
     <string name="pref_app_session_length_sum">Run logging for specified time</string>
 
+    <string name="config_pref_key_LoggingInterval">LoggingInterval</string>
+    <string name="config_pref_key_enable_service_start_setting">enable_service_start_setting</string>
+    <string name="config_pref_key_ServiceStartTime">ServiceStartTime</string>
+    <string name="config_pref_key_enable_session_length_setting">enable_session_length_setting</string>
+    <string name="config_pref_key_SessionLength">SessionLength</string>
+
+    <!--
+    <string name="config_pref_key_"></string>
+    <string name="config_pref_key_"></string>
+    -->
 </resources>

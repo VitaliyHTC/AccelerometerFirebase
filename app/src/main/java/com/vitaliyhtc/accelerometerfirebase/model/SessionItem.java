@@ -5,16 +5,16 @@ import java.util.List;
 
 public class SessionItem {
     private int interval;
-    private String startTime;
-    private String stopTime;
-    private String deviceInfo;
+    private long startTime;
+    private long stopTime;
+    private Device deviceInfo;
     private List<AccelerometerData> coordinates = new ArrayList<>();
 
 
 
     public SessionItem() {}
 
-    public SessionItem(int interval, String startTime, String stopTime, String deviceInfo, List<AccelerometerData> coordinates) {
+    public SessionItem(int interval, long startTime, long stopTime, Device deviceInfo, List<AccelerometerData> coordinates) {
         this.interval = interval;
         this.startTime = startTime;
         this.stopTime = stopTime;
@@ -30,27 +30,27 @@ public class SessionItem {
         this.interval = interval;
     }
 
-    public String getStartTime() {
+    public long getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
 
-    public String getStopTime() {
+    public long getStopTime() {
         return stopTime;
     }
 
-    public void setStopTime(String stopTime) {
+    public void setStopTime(long stopTime) {
         this.stopTime = stopTime;
     }
 
-    public String getDeviceInfo() {
+    public Device getDeviceInfo() {
         return deviceInfo;
     }
 
-    public void setDeviceInfo(String deviceInfo) {
+    public void setDeviceInfo(Device deviceInfo) {
         this.deviceInfo = deviceInfo;
     }
 
@@ -61,9 +61,8 @@ public class SessionItem {
     public void addCoordinate(AccelerometerData coordinate){
         coordinates.add(coordinate);
     }
-    /*
+
     public void setCoordinates(List<AccelerometerData> coordinates) {
         this.coordinates = coordinates;
     }
-    */
 }

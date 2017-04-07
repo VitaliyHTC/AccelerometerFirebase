@@ -1,8 +1,12 @@
 package com.vitaliyhtc.accelerometerfirebase;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +23,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
+import com.vitaliyhtc.accelerometerfirebase.Utils.Utils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -49,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.btn_data_list) Button mButtonShowAsList;
     @BindView(R.id.btn_data_graph) Button mButtonShowAsGraph;
 
-
+    private boolean isMainServiceRunning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +64,8 @@ public class MainActivity extends AppCompatActivity
         ButterKnife.bind(this);
 
         doAuth();
+
+        performBroadcastReceiverRegistration();
 
         // other go here
     }
@@ -87,6 +94,22 @@ public class MainActivity extends AppCompatActivity
             displayUserNameAndImage(mFirebaseUser);
             enableControlButtons();
         }
+    }
+
+    private void performBroadcastReceiverRegistration(){
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                isMainServiceRunning = intent.getExtras().getBoolean(Config.TAG_SERVICE_RUNNING_STATUS, false);
+                if(isMainServiceRunning){
+                    mButtonStart.setEnabled(false);
+                }else{
+                    mButtonStart.setEnabled(true);
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+                new IntentFilter(Config.TAG_ACTIVITY_BROADCAST_RECEIVER));
     }
 
     @Override
@@ -157,11 +180,19 @@ public class MainActivity extends AppCompatActivity
     @OnClick(R.id.btn_start_logging)
     protected void startDataLogging(){
 
+        if (Utils.isNetworkAvailable(getApplicationContext())) {
+            startService(new Intent(this, MainService.class));
+        } else {
+            Toast.makeText(getApplicationContext(), "The Internet is disconnected. Please check the connection.", Toast.LENGTH_LONG).show();
+        }
     }
 
     @OnClick(R.id.btn_stop_logging)
     protected void stopDataLogging(){
 
+        Intent intent = new Intent(Config.TAG_SERVICE_BROADCAST_RECEIVER);
+        intent.putExtra(Config.TAG_SERVICE_RUNNING_STATUS, false);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
 }
