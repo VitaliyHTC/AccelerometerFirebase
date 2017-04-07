@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_app">
+        <ListPreference
+            android:icon="@drawable/ic_timer_black_24dp"
+            android:title="@string/pref_app_logging_interval"
+            android:key="LoggingInterval"
+            android:summary="@string/pref_app_logging_interval_sum"
+            android:defaultValue="1"
+            android:entries="@array/logging_interval_entries"
+            android:entryValues="@array/logging_interval_entryValues"
+            />
+        <CheckBoxPreference
+            android:key="enable_service_start_setting"
+            android:title="@string/pref_app_enable_service_start_setting"
+            android:summary="@string/pref_app_enable_service_start_setting_sum"
+            android:defaultValue="false"/>
+        <com.vitaliyhtc.accelerometerfirebase.Utils.TimePreference
+            android:icon="@drawable/ic_access_alarm_black_24dp"
+            android:title="@string/pref_app_service_start_time"
+            android:key="ServiceStartTime"
+            android:summary="@string/pref_app_service_start_time_sum"
+            android:defaultValue="12:00"
+            android:dependency="enable_service_start_setting"
+            />
+        <CheckBoxPreference
+            android:key="enable_session_length_setting"
+            android:title="@string/pref_app_enable_session_length_setting"
+            android:summary="@string/pref_app_enable_session_length_setting_sum"
+            android:defaultValue="true"/>
+        <com.vitaliyhtc.accelerometerfirebase.Utils.TimePreference
+            android:icon="@drawable/ic_access_alarm_black_24dp"
+            android:title="@string/pref_app_session_length"
+            android:key="SessionLength"
+            android:summary="@string/pref_app_session_length_sum"
+            android:defaultValue="00:03"
+            android:dependency="enable_session_length_setting"
+            />
+    </PreferenceCategory>
+</PreferenceScreen>

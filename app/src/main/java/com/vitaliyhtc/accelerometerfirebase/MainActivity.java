@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity
             if (mFirebaseUser.getPhotoUrl() != null) {
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
-            displayUserNameAndImageByUrl(mUsername, mPhotoUrl);
+            displayUserNameAndImage(mFirebaseUser);
             enableControlButtons();
         }
     }
@@ -99,6 +99,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.settings_menu:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+                return true;
             case R.id.sign_out_menu:
                 mFirebaseAuth.signOut();
                 mUsername = ANONYMOUS;
@@ -123,9 +128,10 @@ public class MainActivity extends AppCompatActivity
 
     /* Helper methods ************************************************************************* **/
 
-    private void displayUserNameAndImageByUrl(String userName, String photoUrl){
-        Picasso.with(getApplicationContext()).load(photoUrl).into(mUserImageView);
-        mUserNameView.setText(userName);
+    private void displayUserNameAndImage(FirebaseUser firebaseUser){
+        Picasso.with(getApplicationContext()).load(mFirebaseUser.getPhotoUrl().toString())
+                .into(mUserImageView);
+        mUserNameView.setText(mFirebaseUser.getDisplayName());
     }
 
     private void displayAnonymousUser(){

@@ -18,6 +18,8 @@
 
         <activity android:name=".SignInActivity" />
 
+        <activity android:name=".SettingsActivity" android:label="@string/action_settings" />
+
     </application>
 
 </manifest>

@@ -9,4 +9,19 @@
     <string name="main_btn_show_as_graph">Graph</string>
     <string name="main_tv_show_as">Show as:</string>
     <string name="sign_out">Sign Out</string>
+    <string name="menu_settings">Settings</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="pref_app">Application Preferences</string>
+    <string name="pref_app_logging_interval">Logging interval</string>
+    <string name="pref_app_logging_interval_sum">Log accelerometer data every x seconds</string>
+    <string name="pref_app_enable_service_start_setting">Run service at specified time</string>
+    <string name="pref_app_enable_service_start_setting_sum">Check if you want to know when it is time for lunch</string>
+    <string name="pref_app_service_start_time">Service start time</string>
+    <string name="pref_app_service_start_time_sum">Start service at specified time</string>
+    <string name="pref_app_enable_session_length_setting">Enable session length setting</string>
+    <string name="pref_app_enable_session_length_setting_sum">Check if you want to run session for specified time</string>
+    <string name="pref_app_session_length">Session length</string>
+    <string name="pref_app_session_length_sum">Run logging for specified time</string>
+
 </resources>
