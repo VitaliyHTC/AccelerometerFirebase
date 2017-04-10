@@ -12,6 +12,10 @@ public abstract class Config {
 
 
 
+    public static final boolean IS_IN_DEBUG_STATE_MAIN_SERVICE = true;
+
+
+
     private Config() {
         throw new AssertionError();
     }

@@ -30,17 +30,21 @@ import com.vitaliyhtc.accelerometerfirebase.model.User;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class MainService extends Service {
 
     private volatile boolean isRunning;
 
+    private boolean isInDebugState = Config.IS_IN_DEBUG_STATE_MAIN_SERVICE;
+
 
     private User mUser;
     private Device mDevice;
     private SessionItem mSessionItem;
 
+    private MainService mMainService;
     private ScheduledExecutorService mScheduleTaskExecutor;
 
     // Firebase instance variables
@@ -56,6 +60,12 @@ public class MainService extends Service {
 
 
 
+    // fields for Runnable
+    private ScheduledFuture<?> mDataFilterRunnableFuture;
+    private volatile AccelerometerData mCurrentAccelerometerData;
+
+
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -65,9 +75,12 @@ public class MainService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.e("onStartCommand()", "start service");
+        if(isInDebugState){
+            Log.e("onStartCommand()", "start service");
+        }
 
         // do work
+        mMainService = this;
         performBroadcastReceiverRegistration();
         readSettings();
         initData();
@@ -77,7 +90,9 @@ public class MainService extends Service {
             makeWork();
         }
 
-        Log.e("onStartCommand()", "return START_NOT_STICKY");
+        if(isInDebugState) {
+            Log.e("onStartCommand()", "return START_NOT_STICKY");
+        }
         return START_NOT_STICKY;
     }
 
@@ -85,6 +100,9 @@ public class MainService extends Service {
     public void onDestroy() {
         super.onDestroy();
         isRunning = false;
+        if(isInDebugState) {
+            Log.e("MainService", "onDestroy()");
+        }
         //release resources here.
     }
 
@@ -116,6 +134,8 @@ public class MainService extends Service {
         mUser = new User();
         mDevice = new Device();
         mSessionItem = new SessionItem();
+
+        mCurrentAccelerometerData = new AccelerometerData();
     }
 
     private void initFirebase(){
@@ -151,8 +171,27 @@ public class MainService extends Service {
     }
 
     private void makeWork(){
-        mScheduleTaskExecutor = Executors.newScheduledThreadPool(1);
+        mScheduleTaskExecutor = Executors.newScheduledThreadPool(2);
         mScheduleTaskExecutor.schedule(new MainServiceRunnable(), 0, TimeUnit.SECONDS);
+        mDataFilterRunnableFuture = mScheduleTaskExecutor.scheduleAtFixedRate(new DataFilterRunnable(), 0, mLoggingInterval, TimeUnit.SECONDS);
+    }
+
+
+
+    private synchronized void setCurrentAccelerometerData(long timeStamp, float x, float y, float z){
+        mCurrentAccelerometerData.setTimeStamp(timeStamp);
+        mCurrentAccelerometerData.setX(x);
+        mCurrentAccelerometerData.setY(y);
+        mCurrentAccelerometerData.setZ(z);
+    }
+
+    private synchronized AccelerometerData getCurrentAccelerometerDataInNewObject(){
+        AccelerometerData accelerometerData = new AccelerometerData();
+        accelerometerData.setTimeStamp(mCurrentAccelerometerData.getTimeStamp());
+        accelerometerData.setX(mCurrentAccelerometerData.getX());
+        accelerometerData.setY(mCurrentAccelerometerData.getY());
+        accelerometerData.setZ(mCurrentAccelerometerData.getZ());
+        return accelerometerData;
     }
 
     private class MainServiceRunnable implements Runnable, SensorEventListener {
@@ -166,7 +205,9 @@ public class MainService extends Service {
 
         @Override
         public void run() {
-            Log.e("MainServiceRunnable", "run()");
+            if(isInDebugState) {
+                Log.e("MainServiceRunnable", "run()");
+            }
 
 
 
@@ -214,21 +255,34 @@ public class MainService extends Service {
             if(isRunning){
                 Sensor mySensor = sensorEvent.sensor;
                 if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){
-                    mSessionItem.addCoordinate(new AccelerometerData(
+
+                    setCurrentAccelerometerData(
                             System.currentTimeMillis(),
                             sensorEvent.values[0],
                             sensorEvent.values[1],
                             sensorEvent.values[2]
-                    ));
+                    );
 
-                    Log.e("onSensorChanged", "new data: x="+sensorEvent.values[0]+"; y="
-                            +sensorEvent.values[1]+"; z="+sensorEvent.values[2]+";");
+                    if(isInDebugState) {
+                        Log.e("onSensorChanged", "new data: x=" + sensorEvent.values[0] + "; y="
+                                + sensorEvent.values[1] + "; z=" + sensorEvent.values[2] + ";");
+                    }
                 }
             }
 
             if(!isRunning){
                 finalizeSensorWork();
+                if(isInDebugState) {
+                    Log.e("MainServiceRunnable", "call mScheduleTaskExecutor.shutdown()");
+                }
                 mScheduleTaskExecutor.shutdown();
+                if(isInDebugState) {
+                    Log.e("MainServiceRunnable", "call mMainService.stopSelf()");
+                }
+                mMainService.stopSelf();
+                if(isInDebugState) {
+                    Log.e("MainServiceRunnable", "stope!");
+                }
             }
         }
 
@@ -238,9 +292,25 @@ public class MainService extends Service {
         }
 
         private void postDataToFirebaseAndShutdown(){
-            Log.e("MainServiceRunnable", "postDataToFirebaseAndShutdown");
+            if(isInDebugState) {
+                Log.e("MainServiceRunnable", "postDataToFirebaseAndShutdown");
+            }
             mDatabase.child(Config.FIREBASE_DB_PATH_USERS).child(mUser.getUserUid()).setValue(mUser);
             mDatabase.child(Config.FIREBASE_DB_PATH_SESSIONS_ITEM).child(mUser.getUserUid()).push().setValue(mSessionItem);
+        }
+    }
+
+
+
+    private class DataFilterRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            if (isRunning) {
+                mSessionItem.addCoordinate(getCurrentAccelerometerDataInNewObject());
+            } else {
+                mDataFilterRunnableFuture.cancel(false);
+            }
         }
     }
 
