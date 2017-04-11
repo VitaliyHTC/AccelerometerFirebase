@@ -46,7 +46,6 @@
         android:enabled="false"
         />
 
-
     <FrameLayout
         android:id="@+id/container_view"
         android:orientation="vertical"
@@ -60,25 +59,42 @@
         android:id="@+id/tv_show_as"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginRight="0dp"
         android:layout_alignParentBottom="true"
         android:text="@string/main_tv_show_as"
         android:textSize="20sp"
         />
 
     <Button
-        android:id="@+id/btn_data_list"
-        android:layout_width="80dp"
+        android:id="@+id/btn_data_history"
+        android:layout_width="72dp"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/tv_show_as"
         android:layout_toRightOf="@id/tv_show_as"
         android:layout_alignParentBottom="true"
+        android:text="@string/main_btn_show_history"
+        android:textAllCaps="false"
+        />
+
+    <Button
+        android:id="@+id/btn_data_list"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/btn_data_history"
+        android:layout_toRightOf="@id/btn_data_history"
+        android:layout_alignParentBottom="true"
         android:text="@string/main_btn_show_as_list"
-        android:textAllCaps="false"/>
+        android:textAllCaps="false"
+        />
 
     <Button
         android:id="@+id/btn_data_graph"
-        android:layout_width="80dp"
+        android:layout_width="72dp"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/btn_data_list"
         android:layout_toRightOf="@id/btn_data_list"

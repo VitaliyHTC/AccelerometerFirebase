@@ -4,8 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,7 +25,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
-import com.vitaliyhtc.accelerometerfirebase.Utils.Utils;
+import com.vitaliyhtc.accelerometerfirebase.interfaces.ActivityToDataFragment;
+import com.vitaliyhtc.accelerometerfirebase.interfaces.SessionItemFragment;
+import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,15 +35,23 @@ import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity
-        implements GoogleApiClient.OnConnectionFailedListener {
+        implements GoogleApiClient.OnConnectionFailedListener,
+        ActivityToDataFragment {
 
     private static final String TAG = "MainActivity";
 
+    private static final String KEY_IS_MAIN_SERVICE_RUNNING = "isMainServiceRunning";
+
+    private static final String KEY_DISPLAYED_FRAGMENT_ID = "displayedFragmentId";
+    private static final int VALUE_FRAGMENT_HISTORY = 0x01;
+    private static final int VALUE_FRAGMENT_LIST = 0x02;
+    private static final int VALUE_FRAGMENT_GRAPH = 0x03;
+
+    private static final String KEY_DISPLAYED_SESSION_ITEM_KEY = "displayedSessionItemKey";
+    public static final String VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF = "0x0FF";
+
     public static final String ANONYMOUS = "anonymous";
 
-    private String mUsername;
-    private String mPhotoUrl;
-    private SharedPreferences mSharedPreferences;
     private GoogleApiClient mGoogleApiClient;
 
     // Firebase instance variables
@@ -51,10 +63,19 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.tv_userName) TextView mUserNameView;
     @BindView(R.id.btn_start_logging) Button mButtonStart;
     @BindView(R.id.btn_stop_logging) Button mButtonStop;
+    @BindView(R.id.btn_data_history) Button mButtonHistory;
     @BindView(R.id.btn_data_list) Button mButtonShowAsList;
     @BindView(R.id.btn_data_graph) Button mButtonShowAsGraph;
 
     private boolean isMainServiceRunning;
+
+    //fields for fragments
+    FragmentManager mFragmentManager;
+
+    private int mLastDisplayedFragment;
+    private String mLastDisplayedSessionItemKey;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,16 +84,37 @@ public class MainActivity extends AppCompatActivity
 
         ButterKnife.bind(this);
 
+        if (savedInstanceState!=null) {
+            isMainServiceRunning = savedInstanceState.getBoolean(KEY_IS_MAIN_SERVICE_RUNNING, false);
+            mLastDisplayedFragment = savedInstanceState.getInt(KEY_DISPLAYED_FRAGMENT_ID, VALUE_FRAGMENT_HISTORY);
+            mLastDisplayedSessionItemKey = savedInstanceState.getString(KEY_DISPLAYED_SESSION_ITEM_KEY, VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF);
+        } else {
+            mLastDisplayedFragment = VALUE_FRAGMENT_HISTORY;
+        }
+
         doAuth();
+
+        if(isMainServiceRunning){
+            mButtonStart.setEnabled(false);
+        }
 
         performBroadcastReceiverRegistration();
 
         // other go here
+        mFragmentManager = getSupportFragmentManager();
+        initFragments();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putBoolean(KEY_IS_MAIN_SERVICE_RUNNING, isMainServiceRunning);
+        outState.putInt(KEY_DISPLAYED_FRAGMENT_ID, mLastDisplayedFragment);
+        outState.putString(KEY_DISPLAYED_SESSION_ITEM_KEY, mLastDisplayedSessionItemKey);
     }
 
     private void doAuth(){
-        mUsername = ANONYMOUS;
-
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
@@ -87,10 +129,6 @@ public class MainActivity extends AppCompatActivity
             finish();
             return;
         } else {
-            mUsername = mFirebaseUser.getDisplayName();
-            if (mFirebaseUser.getPhotoUrl() != null) {
-                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
-            }
             displayUserNameAndImage(mFirebaseUser);
             enableControlButtons();
         }
@@ -129,7 +167,6 @@ public class MainActivity extends AppCompatActivity
                 return true;
             case R.id.sign_out_menu:
                 mFirebaseAuth.signOut();
-                mUsername = ANONYMOUS;
                 displayAnonymousUser();
                 disableControlButtons();
                 startActivity(new Intent(this, SignInActivity.class));
@@ -175,7 +212,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    /* **************************************************************************************** **/
+    /* Buttons, onClick, etc... *************************************************************** **/
 
     @OnClick(R.id.btn_start_logging)
     protected void startDataLogging(){
@@ -195,4 +232,63 @@ public class MainActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
     }
 
+    @OnClick(R.id.btn_data_history)
+    protected void showAsHistory(){
+        if (mLastDisplayedFragment != VALUE_FRAGMENT_HISTORY) {
+            mFragmentManager.beginTransaction().replace(R.id.container_view, new DataHistoryFragment()).commit();
+            mLastDisplayedFragment = VALUE_FRAGMENT_HISTORY;
+        }
+    }
+
+    @OnClick(R.id.btn_data_list)
+    protected void showAsList(){
+        if (mLastDisplayedFragment != VALUE_FRAGMENT_LIST) {
+            Fragment fragment = new DataListFragment();
+            ((SessionItemFragment) fragment).setSessionItemKey(mLastDisplayedSessionItemKey);
+            mFragmentManager.beginTransaction().replace(R.id.container_view, fragment).commit();
+            mLastDisplayedFragment = VALUE_FRAGMENT_LIST;
+        }
+    }
+
+    @OnClick(R.id.btn_data_graph)
+    protected void showAsGraph(){
+        if (mLastDisplayedFragment != VALUE_FRAGMENT_GRAPH) {
+            Fragment fragment = new DataGraphFragment();
+            ((SessionItemFragment) fragment).setSessionItemKey(mLastDisplayedSessionItemKey);
+            mFragmentManager.beginTransaction().replace(R.id.container_view, fragment).commit();
+            mLastDisplayedFragment = VALUE_FRAGMENT_GRAPH;
+        }
+    }
+
+    /* **************************************************************************************** **/
+
+    private void initFragments(){
+        FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+        Fragment fragment;
+        if (mLastDisplayedFragment == VALUE_FRAGMENT_LIST) {
+            fragment = new DataListFragment();
+            ((SessionItemFragment) fragment).setSessionItemKey(mLastDisplayedSessionItemKey);
+            fragmentTransaction.replace(R.id.container_view, fragment).commit();
+        } else if(mLastDisplayedFragment == VALUE_FRAGMENT_GRAPH) {
+            fragment = new DataGraphFragment();
+            ((SessionItemFragment) fragment).setSessionItemKey(mLastDisplayedSessionItemKey);
+            fragmentTransaction.replace(R.id.container_view, fragment).commit();
+        } else {
+            fragmentTransaction.replace(R.id.container_view, new DataHistoryFragment()).commit();
+        }
+    }
+
+
+
+    @Override
+    public FirebaseUser getFirebaseUser() {
+        return mFirebaseUser;
+    }
+
+    @Override
+    public void displayHistoryItemByKey(String sessionItemKey) {
+        Toast.makeText(this, "Session item key: "+sessionItemKey, Toast.LENGTH_LONG).show();
+        mLastDisplayedSessionItemKey = sessionItemKey;
+        showAsList();
+    }
 }

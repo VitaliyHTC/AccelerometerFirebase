@@ -16,7 +16,7 @@
             android:summary="@string/pref_app_enable_service_start_setting_sum"
             android:defaultValue="false"
             />
-        <com.vitaliyhtc.accelerometerfirebase.Utils.TimePreference
+        <com.vitaliyhtc.accelerometerfirebase.utils.TimePreference
             android:icon="@drawable/ic_access_alarm_black_24dp"
             android:title="@string/pref_app_service_start_time"
             android:key="@string/config_pref_key_ServiceStartTime"
@@ -30,7 +30,7 @@
             android:summary="@string/pref_app_enable_session_length_setting_sum"
             android:defaultValue="true"
             />
-        <com.vitaliyhtc.accelerometerfirebase.Utils.TimePreference
+        <com.vitaliyhtc.accelerometerfirebase.utils.TimePreference
             android:icon="@drawable/ic_access_alarm_black_24dp"
             android:title="@string/pref_app_session_length"
             android:key="@string/config_pref_key_SessionLength"

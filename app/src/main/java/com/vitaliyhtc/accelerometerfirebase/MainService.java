@@ -22,7 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.vitaliyhtc.accelerometerfirebase.Utils.TimePreference;
+import com.vitaliyhtc.accelerometerfirebase.utils.TimePreference;
 import com.vitaliyhtc.accelerometerfirebase.model.AccelerometerData;
 import com.vitaliyhtc.accelerometerfirebase.model.Device;
 import com.vitaliyhtc.accelerometerfirebase.model.SessionItem;
@@ -38,7 +38,6 @@ public class MainService extends Service {
     private volatile boolean isRunning;
 
     private boolean isInDebugState = Config.IS_IN_DEBUG_STATE_MAIN_SERVICE;
-
 
     private User mUser;
     private Device mDevice;
@@ -57,8 +56,6 @@ public class MainService extends Service {
     private long mSessionLengthInMillis;
 
     private long mStopTime;
-
-
 
     // fields for Runnable
     private ScheduledFuture<?> mDataFilterRunnableFuture;
@@ -85,7 +82,7 @@ public class MainService extends Service {
         readSettings();
         initData();
         isRunning = true;
-        initFirebase();
+        initFirebaseAndModel();
         if(isRunning){
             makeWork();
         }
@@ -138,7 +135,7 @@ public class MainService extends Service {
         mCurrentAccelerometerData = new AccelerometerData();
     }
 
-    private void initFirebase(){
+    private void initFirebaseAndModel(){
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -173,7 +170,7 @@ public class MainService extends Service {
     private void makeWork(){
         mScheduleTaskExecutor = Executors.newScheduledThreadPool(2);
         mScheduleTaskExecutor.schedule(new MainServiceRunnable(), 0, TimeUnit.SECONDS);
-        mDataFilterRunnableFuture = mScheduleTaskExecutor.scheduleAtFixedRate(new DataFilterRunnable(), 0, mLoggingInterval, TimeUnit.SECONDS);
+        mDataFilterRunnableFuture = mScheduleTaskExecutor.scheduleAtFixedRate(new DataFilterRunnable(), 700, mLoggingInterval*1000, TimeUnit.MILLISECONDS);
     }
 
 
@@ -194,6 +191,8 @@ public class MainService extends Service {
         return accelerometerData;
     }
 
+
+
     private class MainServiceRunnable implements Runnable, SensorEventListener {
         long mCurrentMillis;
 
@@ -208,8 +207,6 @@ public class MainService extends Service {
             if(isInDebugState) {
                 Log.e("MainServiceRunnable", "run()");
             }
-
-
 
             Intent intent = new Intent(Config.TAG_ACTIVITY_BROADCAST_RECEIVER);
             intent.putExtra(Config.TAG_SERVICE_RUNNING_STATUS, true);
@@ -230,18 +227,6 @@ public class MainService extends Service {
               *            slower than the specified rate. Usually events are received faster.
              */
             mSensorManager.registerListener(this, mAccelerometerSensor, mLoggingInterval*1000*1000);
-        }
-
-        private void finalizeSensorWork(){
-            mSensorManager.unregisterListener(this);
-            mSessionItem.setStopTime(System.currentTimeMillis());
-            postDataToFirebaseAndShutdown();
-
-
-
-            Intent intent = new Intent(Config.TAG_ACTIVITY_BROADCAST_RECEIVER);
-            intent.putExtra(Config.TAG_SERVICE_RUNNING_STATUS, false);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
 
         @Override
@@ -271,7 +256,7 @@ public class MainService extends Service {
             }
 
             if(!isRunning){
-                finalizeSensorWork();
+                finalizeSensorWorkAndPostDataToFirebase();
                 if(isInDebugState) {
                     Log.e("MainServiceRunnable", "call mScheduleTaskExecutor.shutdown()");
                 }
@@ -291,6 +276,16 @@ public class MainService extends Service {
             //do nothing.
         }
 
+        private void finalizeSensorWorkAndPostDataToFirebase(){
+            mSensorManager.unregisterListener(this);
+            mSessionItem.setStopTime(System.currentTimeMillis());
+            postDataToFirebaseAndShutdown();
+
+            Intent intent = new Intent(Config.TAG_ACTIVITY_BROADCAST_RECEIVER);
+            intent.putExtra(Config.TAG_SERVICE_RUNNING_STATUS, false);
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
+
         private void postDataToFirebaseAndShutdown(){
             if(isInDebugState) {
                 Log.e("MainServiceRunnable", "postDataToFirebaseAndShutdown");
@@ -303,7 +298,6 @@ public class MainService extends Service {
 
 
     private class DataFilterRunnable implements Runnable {
-
         @Override
         public void run() {
             if (isRunning) {

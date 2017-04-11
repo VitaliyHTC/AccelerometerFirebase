@@ -1,4 +1,4 @@
-package com.vitaliyhtc.accelerometerfirebase.Utils;
+package com.vitaliyhtc.accelerometerfirebase.utils;
 
 import android.content.Context;
 import android.content.res.TypedArray;

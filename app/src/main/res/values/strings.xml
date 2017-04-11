@@ -29,6 +29,7 @@
     <string name="config_pref_key_ServiceStartTime">ServiceStartTime</string>
     <string name="config_pref_key_enable_session_length_setting">enable_session_length_setting</string>
     <string name="config_pref_key_SessionLength">SessionLength</string>
+    <string name="main_btn_show_history">History</string>
 
     <!--
     <string name="config_pref_key_"></string>

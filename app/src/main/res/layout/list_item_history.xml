@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    >
+
+    <TextView
+        android:id="@+id/tv_startTimeStamp"
+        android:layout_width="196dp"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:id="@+id/tv_deviceModel"
+        android:layout_width="96dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        />
+    <TextView
+        android:id="@+id/tv_stopTime"
+        android:layout_width="96dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_startTimeStamp"
+        />
+    <TextView
+        android:id="@+id/tv_coordinatesCount"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/tv_stopTime"
+        android:layout_toRightOf="@+id/tv_stopTime"
+        android:layout_toStartOf="@+id/tv_interval"
+        android:layout_toLeftOf="@+id/tv_interval"
+        android:layout_below="@+id/tv_startTimeStamp"
+        />
+    <TextView
+        android:id="@+id/tv_interval"
+        android:layout_width="128dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/tv_startTimeStamp"
+        />
+
+</RelativeLayout>
