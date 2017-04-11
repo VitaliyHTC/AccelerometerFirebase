@@ -41,13 +41,6 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
 
     private SessionItem mSessionItem;
 
-    private List<Entry> entriesX;
-    private List<Entry> entriesY;
-    private List<Entry> entriesZ;
-    private LineDataSet dsx;
-    private LineDataSet dsy;
-    private LineDataSet dsz;
-
 
 
     @Override
@@ -109,9 +102,9 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
     private LineData getData(){
         ArrayList<ILineDataSet> sets = new ArrayList<>();
 
-        entriesX = new ArrayList<>();
-        entriesY = new ArrayList<>();
-        entriesZ = new ArrayList<>();
+        List<Entry> entriesX = new ArrayList<>();
+        List<Entry> entriesY = new ArrayList<>();
+        List<Entry> entriesZ = new ArrayList<>();
 
         for (AccelerometerData data : mSessionItem.getCoordinates()) {
             if(mReferenceTimestamp == 0){
@@ -122,9 +115,9 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
             entriesZ.add(new Entry((data.getTimeStamp() - mReferenceTimestamp)/10, data.getZ()));
         }
 
-        dsx = new LineDataSet(entriesX, "X");
-        dsy = new LineDataSet(entriesY, "Y");
-        dsz = new LineDataSet(entriesZ, "Z");
+        LineDataSet dsx = new LineDataSet(entriesX, "X");
+        LineDataSet dsy = new LineDataSet(entriesY, "Y");
+        LineDataSet dsz = new LineDataSet(entriesZ, "Z");
 
         dsx.setLineWidth(2f);
         dsy.setLineWidth(2f);

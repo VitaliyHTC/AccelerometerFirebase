@@ -1,5 +1,6 @@
 package com.vitaliyhtc.accelerometerfirebase;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -93,6 +94,10 @@ public class MainActivity extends AppCompatActivity
         }
 
         doAuth();
+
+        if (isMyServiceRunning(MainService.class)) {
+            isMainServiceRunning = true;
+        }
 
         if(isMainServiceRunning){
             mButtonStart.setEnabled(false);
@@ -200,6 +205,16 @@ public class MainActivity extends AppCompatActivity
         mUserNameView.setText(ANONYMOUS);
     }
 
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void enableControlButtons(){
         mButtonStart.setEnabled(true);
         mButtonStop.setEnabled(true);
@@ -216,7 +231,6 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.btn_start_logging)
     protected void startDataLogging(){
-
         if (Utils.isNetworkAvailable(getApplicationContext())) {
             startService(new Intent(this, MainService.class));
         } else {
@@ -226,7 +240,6 @@ public class MainActivity extends AppCompatActivity
 
     @OnClick(R.id.btn_stop_logging)
     protected void stopDataLogging(){
-
         Intent intent = new Intent(Config.TAG_SERVICE_BROADCAST_RECEIVER);
         intent.putExtra(Config.TAG_SERVICE_RUNNING_STATUS, false);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
@@ -287,7 +300,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void displayHistoryItemByKey(String sessionItemKey) {
-        Toast.makeText(this, "Session item key: "+sessionItemKey, Toast.LENGTH_LONG).show();
         mLastDisplayedSessionItemKey = sessionItemKey;
         showAsList();
     }

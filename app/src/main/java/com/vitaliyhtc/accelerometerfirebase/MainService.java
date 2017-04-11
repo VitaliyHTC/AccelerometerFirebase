@@ -1,5 +1,7 @@
 package com.vitaliyhtc.accelerometerfirebase;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,6 +36,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class MainService extends Service {
+
+    private static final int ONGOING_NOTIFICATION_ID = 0xff;
 
     private volatile boolean isRunning;
 
@@ -71,6 +75,29 @@ public class MainService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        Notification notification;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            notification = new Notification.Builder(this)
+                    .setContentTitle(getText(R.string.main_service_notification_title))
+                    .setContentText(getText(R.string.main_service_notification_message))
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentIntent(pendingIntent)
+                    .setTicker(getText(R.string.main_service_notification_message))
+                    .build();
+        } else {
+            notification = new Notification.Builder(this)
+                    .setContentTitle(getText(R.string.main_service_notification_title))
+                    .setContentText(getText(R.string.main_service_notification_message))
+                    .setSmallIcon(R.drawable.ic_voicemail_white_24dp)
+                    .setContentIntent(pendingIntent)
+                    .setTicker(getText(R.string.main_service_notification_message))
+                    .getNotification();
+        }
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
 
         if(isInDebugState){
             Log.e("onStartCommand()", "start service");
@@ -261,6 +288,10 @@ public class MainService extends Service {
                     Log.e("MainServiceRunnable", "call mScheduleTaskExecutor.shutdown()");
                 }
                 mScheduleTaskExecutor.shutdown();
+                if(isInDebugState) {
+                    Log.e("MainServiceRunnable", "call mMainService.stopForeground(true)");
+                }
+                stopForeground(true);
                 if(isInDebugState) {
                     Log.e("MainServiceRunnable", "call mMainService.stopSelf()");
                 }

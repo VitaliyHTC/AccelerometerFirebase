@@ -54,12 +54,8 @@ public class DataHistoryFragment extends Fragment {
         mLinearLayoutManager.setStackFromEnd(true);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
 
-
-
         DatabaseReference databaseReference = mDatabase.child(FIREBASE_DB_PATH_SESSIONS_ITEM)
                 .child(((ActivityToDataFragment)getActivity()).getFirebaseUser().getUid());
-
-
 
         mFirebaseAdapter = new FirebaseRecyclerAdapter<SessionItem, DataHistoryFragment.SessionItemViewHolder>(
                 SessionItem.class,
@@ -113,7 +109,6 @@ public class DataHistoryFragment extends Fragment {
 
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
-
     }
 
 

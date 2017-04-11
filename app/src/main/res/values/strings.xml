@@ -30,6 +30,8 @@
     <string name="config_pref_key_enable_session_length_setting">enable_session_length_setting</string>
     <string name="config_pref_key_SessionLength">SessionLength</string>
     <string name="main_btn_show_history">History</string>
+    <string name="main_service_notification_title">Logging service</string>
+    <string name="main_service_notification_message">Pick accelerometer data and save them to firebase.</string>
 
     <!--
     <string name="config_pref_key_"></string>

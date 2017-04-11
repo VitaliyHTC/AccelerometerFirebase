@@ -30,9 +30,6 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
     private ActivityToDataFragment mActivityToFragment;
 
     private DatabaseReference mDatabase;
-    private FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder> mFirebaseAdapter;
-    private RecyclerView mRecyclerView;
-    private LinearLayoutManager mLinearLayoutManager;
     private ProgressBar mProgressBar;
 
 
@@ -68,12 +65,10 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        mRecyclerView = (RecyclerView) getActivity().findViewById(R.id.recycler_view);
-        mLinearLayoutManager = new LinearLayoutManager(getContext());
-        mLinearLayoutManager.setStackFromEnd(true);
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
-
-
+        RecyclerView recyclerView = (RecyclerView) getActivity().findViewById(R.id.recycler_view);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
 
         DatabaseReference databaseReference = mDatabase
                 .child(FIREBASE_DB_PATH_SESSIONS_ITEM)
@@ -81,9 +76,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
                 .child(mSessionItemKey)
                 .child(FIREBASE_DB_PATH_COORDINATES);
 
-
-
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder>(
+        FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder> firebaseAdapter = new FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder>(
                 AccelerometerData.class,
                 R.layout.list_item_accelerometer_data,
                 AccelerometerDataViewHolder.class,
@@ -92,20 +85,20 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
             @Override
             protected void populateViewHolder(AccelerometerDataViewHolder viewHolder, AccelerometerData model, int position) {
                 mProgressBar.setVisibility(ProgressBar.GONE);
-                if (model !=null) {
+                if (model != null) {
                     viewHolder.timeStampTextView.setText(Utils.getDate(model.getTimeStamp(), TIME_FULL_FORMAT));
-                    String x = "X: "+model.getX();
+                    String x = "X: " + model.getX();
                     viewHolder.accelerometerXTextView.setText(x);
-                    String y = "Y: "+model.getY();
+                    String y = "Y: " + model.getY();
                     viewHolder.accelerometerYTextView.setText(y);
-                    String z = "Z: "+model.getZ();
+                    String z = "Z: " + model.getZ();
                     viewHolder.accelerometerZTextView.setText(z);
                 }
             }
         };
 
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mRecyclerView.setAdapter(mFirebaseAdapter);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(firebaseAdapter);
     }
 
 
