@@ -24,13 +24,9 @@ public class LaunchActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = "LaunchActivity";
 
-
-
-    private GoogleApiClient mGoogleApiClient;
-
-    // Firebase instance variables
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
+
 
 
     @Override
@@ -41,14 +37,12 @@ public class LaunchActivity extends AppCompatActivity
         doAuth();
 
         ButterKnife.bind(this);
-
-        // other work starts from here.
     }
 
 
 
     private void doAuth(){
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
+        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
                 .build();
