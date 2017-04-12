@@ -32,6 +32,9 @@
     <string name="main_btn_show_history">History</string>
     <string name="main_service_notification_title">Logging service</string>
     <string name="main_service_notification_message">Pick accelerometer data and save them to firebase.</string>
+    <string name="launch_title">What to launch?</string>
+    <string name="launch_accelerometer">Accelerometer</string>
+    <string name="launch_filestore">FileStore</string>
 
     <!--
     <string name="config_pref_key_"></string>

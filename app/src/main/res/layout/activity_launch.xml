@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <TextView
+        android:id="@+id/tv_launch_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:text="@string/launch_title"
+        />
+
+    <Button
+        android:id="@+id/btn_launch_accelerometer"
+        android:layout_width="196dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/tv_launch_title"
+        android:text="@string/launch_accelerometer"
+        android:textAllCaps="false"
+        />
+
+    <Button
+        android:id="@+id/btn_launch_filestore"
+        android:layout_width="196dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/btn_launch_accelerometer"
+        android:text="@string/launch_filestore"
+        android:textAllCaps="false"
+        />
+
+</RelativeLayout>
