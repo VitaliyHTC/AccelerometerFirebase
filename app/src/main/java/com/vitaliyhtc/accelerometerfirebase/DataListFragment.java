@@ -41,6 +41,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
         }
     }
 
+    // TODO: 12.04.17 Why not using butterknife?
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -58,6 +59,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
         }
     }
 
+    // TODO: 12.04.17 too much is happening here. Method should do only one job
     private void init(){
         if(mActivityToFragment == null){
             mActivityToFragment = (ActivityToDataFragment) getActivity();
@@ -102,7 +104,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
     }
 
 
-
+    // TODO: 12.04.17  in separate class file. Check this everywhere
     private static class AccelerometerDataViewHolder extends RecyclerView.ViewHolder {
         TextView timeStampTextView;
         TextView accelerometerXTextView;

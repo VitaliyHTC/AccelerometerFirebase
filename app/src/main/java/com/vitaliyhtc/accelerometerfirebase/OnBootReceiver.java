@@ -13,6 +13,7 @@ import com.vitaliyhtc.accelerometerfirebase.utils.TimePreference;
 import java.util.Calendar;
 
 public class OnBootReceiver extends BroadcastReceiver {
+    // TODO: 12.04.17 use ctrl + alt + l to format code. Check this everywhere
     public static void setAlarm(Context ctxt) {
         AlarmManager mgr=(AlarmManager)ctxt.getSystemService(Context.ALARM_SERVICE);
         Calendar cal=Calendar.getInstance();

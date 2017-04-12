@@ -12,6 +12,7 @@ public class TimePreference extends DialogPreference {
     private int lastMinute=0;
     private TimePicker picker=null;
 
+    // TODO: 12.04.17 format code
     public static int getHour(String time) {
         String[] pieces=time.split(":");
 

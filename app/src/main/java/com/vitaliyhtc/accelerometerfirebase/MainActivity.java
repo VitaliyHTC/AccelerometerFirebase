@@ -77,7 +77,10 @@ public class MainActivity extends AppCompatActivity
     private String mLastDisplayedSessionItemKey;
 
 
-
+    // TODO: 12.04.17 There is a onRestoreInstanceState method, which is called only if the state is not null
+    // so you don't need to check if instance is null
+    // Also it would keep on create cleaner
+    // TODO: 12.04.17 Method hierarchy. First public/protected and then private
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,7 +195,7 @@ public class MainActivity extends AppCompatActivity
 
 
     /* Helper methods ************************************************************************* **/
-
+    // TODO: 12.04.17 Picasso can load uri
     private void displayUserNameAndImage(FirebaseUser firebaseUser){
         Picasso.with(getApplicationContext()).load(mFirebaseUser.getPhotoUrl().toString())
                 .into(mUserImageView);
@@ -228,12 +231,13 @@ public class MainActivity extends AppCompatActivity
 
 
     /* Buttons, onClick, etc... *************************************************************** **/
-
+    // TODO: 12.04.17 "mFragmentManager.beginTransaction().replace(R.id.container_view, fragment).commit();" is in each click. DRY.
     @OnClick(R.id.btn_start_logging)
     protected void startDataLogging(){
         if (Utils.isNetworkAvailable(getApplicationContext())) {
             startService(new Intent(this, MainService.class));
         } else {
+            // TODO: 12.04.17 hardcode in every toast. Check this
             Toast.makeText(getApplicationContext(), "The Internet is disconnected. Please check the connection.", Toast.LENGTH_LONG).show();
         }
     }
@@ -275,6 +279,7 @@ public class MainActivity extends AppCompatActivity
 
     /* **************************************************************************************** **/
 
+    // TODO: 12.04.17 same as above. DRY
     private void initFragments(){
         FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
         Fragment fragment;

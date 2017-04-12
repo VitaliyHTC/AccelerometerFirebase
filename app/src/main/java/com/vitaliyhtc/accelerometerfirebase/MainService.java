@@ -73,6 +73,8 @@ public class MainService extends Service {
         return null;
     }
 
+
+    // TODO: 12.04.17 separate different actions into different methods
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -142,7 +144,7 @@ public class MainService extends Service {
     }
 
 
-
+    // TODO: 12.04.17 same as below
     private void readSettings(){
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Resources res = getResources();
@@ -194,6 +196,7 @@ public class MainService extends Service {
         }
     }
 
+    // TODO: 12.04.17 700, 1000, etc hardcoded values. Only you know what they are for. Need to separate them into constants. Check this everywhere
     private void makeWork(){
         mScheduleTaskExecutor = Executors.newScheduledThreadPool(2);
         mScheduleTaskExecutor.schedule(new MainServiceRunnable(), 0, TimeUnit.SECONDS);

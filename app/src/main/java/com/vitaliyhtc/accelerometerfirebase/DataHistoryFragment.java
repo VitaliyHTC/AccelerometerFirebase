@@ -45,6 +45,8 @@ public class DataHistoryFragment extends Fragment {
         init();
     }
 
+    // TODO: 12.04.17 Why not using butteknife? Check this everywhere
+    // TODO: 12.04.17 Too many things are happening in a single method. Check this everywhere
     private void init(){
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
@@ -112,7 +114,7 @@ public class DataHistoryFragment extends Fragment {
     }
 
 
-
+    // TODO: 12.04.17 Crash here. Separate ViewHolder classes in different class files. Crash was because of the package local inner class
     static class SessionItemViewHolder extends RecyclerView.ViewHolder {
         TextView startTimeStampTextView;
         TextView deviceModelTextView;

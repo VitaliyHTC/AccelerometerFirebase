@@ -10,6 +10,7 @@ import android.view.MenuItem;
 
 public class SettingsActivity extends SettingsActivityAdapter {
 
+    // TODO: 12.04.17 code style. Check everywhere.
     SharedPreferences prefs=null;
 
     @Override

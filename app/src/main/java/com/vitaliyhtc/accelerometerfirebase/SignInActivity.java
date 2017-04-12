@@ -35,6 +35,7 @@ public class SignInActivity extends AppCompatActivity implements
     // Firebase instance variables
     private FirebaseAuth mFirebaseAuth;
 
+    // TODO: 12.04.17 use "*ClassName*.this" instead of "this". Check this everywhere
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
