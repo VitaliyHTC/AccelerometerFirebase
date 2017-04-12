@@ -21,11 +21,15 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MainActivity" />
 
         <activity android:name=".SignInActivity" />
 
         <activity android:name=".SettingsActivity" android:label="@string/action_settings" />
+
+        <activity android:name=".FileStoreActivity" />
+
+
 
         <service
             android:name=".MainService"
@@ -38,6 +42,7 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".OnAlarmReceiver" />
+
     </application>
 
 </manifest>
