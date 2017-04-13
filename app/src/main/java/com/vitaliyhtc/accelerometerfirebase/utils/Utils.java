@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -12,7 +14,6 @@ public abstract class Utils {
     private Utils() {
         throw new AssertionError();
     }
-
 
 
     public static boolean isNetworkAvailable(Context context) {
@@ -31,7 +32,7 @@ public abstract class Utils {
         return formatter.format(calendar.getTime());
     }
 
-    public static String getStringFromFloat(float value){
-        return ""+value;
+    public static String getCurrentUserUid() {
+        return FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 }

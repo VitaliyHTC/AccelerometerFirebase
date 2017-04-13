@@ -1,4 +1,4 @@
-package com.vitaliyhtc.accelerometerfirebase.model;
+package com.vitaliyhtc.accelerometerfirebase.models;
 
 public class Device {
 

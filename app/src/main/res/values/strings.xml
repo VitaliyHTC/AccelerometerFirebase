@@ -7,6 +7,7 @@
     <string name="main_btn_stop">Stop</string>
     <string name="main_btn_show_as_list">List</string>
     <string name="main_btn_show_as_graph">Graph</string>
+    <string name="main_btn_show_history">History</string>
     <string name="main_tv_show_as">Show as:</string>
     <string name="sign_out">Sign Out</string>
     <string name="menu_settings">Settings</string>
@@ -23,18 +24,23 @@
     <string name="pref_app_enable_session_length_setting_sum">Check if you want to run session for specified time</string>
     <string name="pref_app_session_length">Session length</string>
     <string name="pref_app_session_length_sum">Run logging for specified time</string>
+    <string name="pref_app_time_pref_set">Set</string>
+    <string name="pref_app_time_pref_cancel">Cancel</string>
 
     <string name="config_pref_key_LoggingInterval">LoggingInterval</string>
     <string name="config_pref_key_enable_service_start_setting">enable_service_start_setting</string>
     <string name="config_pref_key_ServiceStartTime">ServiceStartTime</string>
     <string name="config_pref_key_enable_session_length_setting">enable_session_length_setting</string>
     <string name="config_pref_key_SessionLength">SessionLength</string>
-    <string name="main_btn_show_history">History</string>
+
     <string name="main_service_notification_title">Logging service</string>
     <string name="main_service_notification_message">Pick accelerometer data and save them to firebase.</string>
 
-    <!--
-    <string name="config_pref_key_"></string>
-    <string name="config_pref_key_"></string>
-    -->
+    <string name="error_toast_no_internet">The Internet is disconnected. Please check the connection.</string>
+    <string name="error_toast_google_play_services_error">Google Play Services error.</string>
+
+    <string name="launch_title">What to launch?</string>
+    <string name="launch_accelerometer">Accelerometer</string>
+    <string name="launch_filestore">FileStore</string>
+
 </resources>

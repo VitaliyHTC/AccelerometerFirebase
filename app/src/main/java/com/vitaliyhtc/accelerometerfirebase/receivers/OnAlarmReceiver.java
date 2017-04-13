@@ -1,9 +1,10 @@
-package com.vitaliyhtc.accelerometerfirebase;
+package com.vitaliyhtc.accelerometerfirebase.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.vitaliyhtc.accelerometerfirebase.services.MainService;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 
 public class OnAlarmReceiver extends BroadcastReceiver {

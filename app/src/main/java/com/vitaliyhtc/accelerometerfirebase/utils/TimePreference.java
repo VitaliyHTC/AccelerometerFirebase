@@ -7,31 +7,35 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TimePicker;
 
-// TODO: 13/04/17  AndroidStudio shortcut to fix code style Ctrl + Alt + L
+import com.vitaliyhtc.accelerometerfirebase.R;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 public class TimePreference extends DialogPreference {
+    private static final int GET_HOUR_OF_DAY = 0x01;
+    private static final int GET_MINUTES = 0x02;
+
     private int lastHour = 0;
     private int lastMinute = 0;
     private TimePicker picker = null;
 
-    // TODO: 12.04.17 use simple date format to parse date/time
     public static int getHour(String time) {
-        String[] pieces = time.split(":");
-
-        return (Integer.parseInt(pieces[0]));
+        return parse24hTimeString(time, GET_HOUR_OF_DAY);
     }
 
     public static int getMinute(String time) {
-        String[] pieces = time.split(":");
-
-        return (Integer.parseInt(pieces[1]));
+        return parse24hTimeString(time, GET_MINUTES);
     }
 
     public TimePreference(Context ctxt, AttributeSet attrs) {
         super(ctxt, attrs);
 
-        // TODO: 13/04/17 avoid hardcode visible to user
-        setPositiveButtonText("Set");
-        setNegativeButtonText("Cancel");
+        setPositiveButtonText(ctxt.getResources().getString(R.string.pref_app_time_pref_set));
+        setNegativeButtonText(ctxt.getResources().getString(R.string.pref_app_time_pref_cancel));
     }
 
     @Override
@@ -86,5 +90,29 @@ public class TimePreference extends DialogPreference {
 
         lastHour = getHour(time);
         lastMinute = getMinute(time);
+    }
+
+
+
+    private static int parse24hTimeString(String value, int whatToReturn){
+        int hourOfDay = 0;
+        int minute = 0;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+            Date date = sdf.parse(value);
+            Calendar calendar = GregorianCalendar.getInstance();
+            calendar.setTime(date);
+            hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+            minute = calendar.get(Calendar.MINUTE);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if (whatToReturn == GET_HOUR_OF_DAY) {
+            return hourOfDay;
+        } else if (whatToReturn == GET_MINUTES) {
+            return minute;
+        } else {
+            return 0;
+        }
     }
 }

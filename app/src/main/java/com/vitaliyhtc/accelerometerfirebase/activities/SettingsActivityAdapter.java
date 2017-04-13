@@ -1,4 +1,4 @@
-package com.vitaliyhtc.accelerometerfirebase;
+package com.vitaliyhtc.accelerometerfirebase.activities;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

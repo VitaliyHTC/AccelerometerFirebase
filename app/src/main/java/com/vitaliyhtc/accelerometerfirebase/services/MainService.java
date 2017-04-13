@@ -1,4 +1,4 @@
-package com.vitaliyhtc.accelerometerfirebase;
+package com.vitaliyhtc.accelerometerfirebase.services;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -24,11 +24,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.vitaliyhtc.accelerometerfirebase.Config;
+import com.vitaliyhtc.accelerometerfirebase.R;
+import com.vitaliyhtc.accelerometerfirebase.activities.MainActivity;
 import com.vitaliyhtc.accelerometerfirebase.utils.TimePreference;
-import com.vitaliyhtc.accelerometerfirebase.model.AccelerometerData;
-import com.vitaliyhtc.accelerometerfirebase.model.Device;
-import com.vitaliyhtc.accelerometerfirebase.model.SessionItem;
-import com.vitaliyhtc.accelerometerfirebase.model.User;
+import com.vitaliyhtc.accelerometerfirebase.models.AccelerometerData;
+import com.vitaliyhtc.accelerometerfirebase.models.Device;
+import com.vitaliyhtc.accelerometerfirebase.models.SessionItem;
+import com.vitaliyhtc.accelerometerfirebase.models.User;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,6 +41,9 @@ import java.util.concurrent.TimeUnit;
 public class MainService extends Service {
 
     private static final int ONGOING_NOTIFICATION_ID = 0xff;
+    private static final int DATA_FILTER_INITIAL_DELAY_IN_MILLISECONDS = 700;
+    private static final String DEFAULT_LOGGING_INTERVAL_IN_SECONDS = "1";
+    private static final String DEFAULT_SESSION_LENGTH = "00:03";
 
     private volatile boolean isRunning;
 
@@ -66,18 +72,46 @@ public class MainService extends Service {
     private volatile AccelerometerData mCurrentAccelerometerData;
 
 
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
 
-
-    // TODO: 12.04.17 separate different actions into different methods
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (isInDebugState) {
+            Log.e("onStartCommand()", "start service");
+        }
+        // do work
+        runServiceAsForeground();
+        mMainService = this;
+        performBroadcastReceiverRegistration();
+        readSettings();
+        initData();
+        isRunning = true;
+        initFirebaseAndModel();
+        if (isRunning) {
+            makeWork();
+        }
 
+        if (isInDebugState) {
+            Log.e("onStartCommand()", "return START_NOT_STICKY");
+        }
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        isRunning = false;
+        if (isInDebugState) {
+            Log.e("MainService", "onDestroy()");
+        }
+        //release resources here.
+    }
+
+    private void runServiceAsForeground() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         Notification notification;
@@ -98,41 +132,10 @@ public class MainService extends Service {
                     .setTicker(getText(R.string.main_service_notification_message))
                     .getNotification();
         }
-
         startForeground(ONGOING_NOTIFICATION_ID, notification);
-
-        if(isInDebugState){
-            Log.e("onStartCommand()", "start service");
-        }
-
-        // do work
-        mMainService = this;
-        performBroadcastReceiverRegistration();
-        readSettings();
-        initData();
-        isRunning = true;
-        initFirebaseAndModel();
-        if(isRunning){
-            makeWork();
-        }
-
-        if(isInDebugState) {
-            Log.e("onStartCommand()", "return START_NOT_STICKY");
-        }
-        return START_NOT_STICKY;
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        isRunning = false;
-        if(isInDebugState) {
-            Log.e("MainService", "onDestroy()");
-        }
-        //release resources here.
-    }
-
-    private void performBroadcastReceiverRegistration(){
+    private void performBroadcastReceiverRegistration() {
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -143,28 +146,25 @@ public class MainService extends Service {
                 new IntentFilter(Config.TAG_SERVICE_BROADCAST_RECEIVER));
     }
 
-
-    // TODO: 12.04.17 same as below
-    private void readSettings(){
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    private void readSettings() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Resources res = getResources();
 
         // Default values same as in res/xml/settings.xml
-        mLoggingInterval = Integer.parseInt(prefs.getString(res.getString(R.string.config_pref_key_LoggingInterval), "1"));
+        mLoggingInterval = Integer.parseInt(prefs.getString(res.getString(R.string.config_pref_key_LoggingInterval), DEFAULT_LOGGING_INTERVAL_IN_SECONDS));
         isEnabledSessionLengthSetting = prefs.getBoolean(res.getString(R.string.config_pref_key_enable_session_length_setting), true);
-        mSessionLength = prefs.getString(res.getString(R.string.config_pref_key_SessionLength), "00:03");
-        mSessionLengthInMillis = (TimePreference.getHour(mSessionLength)*60+TimePreference.getMinute(mSessionLength))*60*1000;
+        mSessionLength = prefs.getString(res.getString(R.string.config_pref_key_SessionLength), DEFAULT_SESSION_LENGTH);
+        mSessionLengthInMillis = (TimePreference.getHour(mSessionLength) * 60 + TimePreference.getMinute(mSessionLength)) * 60 * 1000;
     }
 
-    private void initData(){
+    private void initData() {
         mUser = new User();
         mDevice = new Device();
         mSessionItem = new SessionItem();
-
         mCurrentAccelerometerData = new AccelerometerData();
     }
 
-    private void initFirebaseAndModel(){
+    private void initFirebaseAndModel() {
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
@@ -196,23 +196,26 @@ public class MainService extends Service {
         }
     }
 
-    // TODO: 12.04.17 700, 1000, etc hardcoded values. Only you know what they are for. Need to separate them into constants. Check this everywhere
-    private void makeWork(){
+    private void makeWork() {
         mScheduleTaskExecutor = Executors.newScheduledThreadPool(2);
         mScheduleTaskExecutor.schedule(new MainServiceRunnable(), 0, TimeUnit.SECONDS);
-        mDataFilterRunnableFuture = mScheduleTaskExecutor.scheduleAtFixedRate(new DataFilterRunnable(), 700, mLoggingInterval*1000, TimeUnit.MILLISECONDS);
+        mDataFilterRunnableFuture = mScheduleTaskExecutor
+                .scheduleAtFixedRate(
+                        new DataFilterRunnable(),
+                        DATA_FILTER_INITIAL_DELAY_IN_MILLISECONDS,
+                        mLoggingInterval * 1000,
+                        TimeUnit.MILLISECONDS);
     }
 
 
-
-    private synchronized void setCurrentAccelerometerData(long timeStamp, float x, float y, float z){
+    private synchronized void setCurrentAccelerometerData(long timeStamp, float x, float y, float z) {
         mCurrentAccelerometerData.setTimeStamp(timeStamp);
         mCurrentAccelerometerData.setX(x);
         mCurrentAccelerometerData.setY(y);
         mCurrentAccelerometerData.setZ(z);
     }
 
-    private synchronized AccelerometerData getCurrentAccelerometerDataInNewObject(){
+    private synchronized AccelerometerData getCurrentAccelerometerDataInNewObject() {
         AccelerometerData accelerometerData = new AccelerometerData();
         accelerometerData.setTimeStamp(mCurrentAccelerometerData.getTimeStamp());
         accelerometerData.setX(mCurrentAccelerometerData.getX());
@@ -220,7 +223,6 @@ public class MainService extends Service {
         accelerometerData.setZ(mCurrentAccelerometerData.getZ());
         return accelerometerData;
     }
-
 
 
     private class MainServiceRunnable implements Runnable, SensorEventListener {
@@ -234,7 +236,7 @@ public class MainService extends Service {
 
         @Override
         public void run() {
-            if(isInDebugState) {
+            if (isInDebugState) {
                 Log.e("MainServiceRunnable", "run()");
             }
 
@@ -247,30 +249,27 @@ public class MainService extends Service {
             isInitiated = true;
         }
 
-        private void initSensor(){
+        private void initSensor() {
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
             /**
-              * @param samplingPeriodUs The rate {@link android.hardware.SensorEvent sensor events} are
-              *            delivered at. This is only a hint to the system. Events may be received faster or
-              *            slower than the specified rate. Usually events are received faster.
+             * @param samplingPeriodUs The rate {@link android.hardware.SensorEvent sensor events} are
+             *            delivered at. This is only a hint to the system. Events may be received faster or
+             *            slower than the specified rate. Usually events are received faster.
              */
-            mSensorManager.registerListener(this, mAccelerometerSensor, mLoggingInterval*1000*1000);
+            mSensorManager.registerListener(this, mAccelerometerSensor, mLoggingInterval * 1000 * 1000);
         }
 
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
-
             mCurrentMillis = System.currentTimeMillis();
-            if(isEnabledSessionLengthSetting && mCurrentMillis > mStopTime){
+            if (isEnabledSessionLengthSetting && mCurrentMillis > mStopTime) {
                 isRunning = false;
             }
-
-            if(isRunning){
+            if (isRunning) {
                 Sensor mySensor = sensorEvent.sensor;
-                if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){
-
+                if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     setCurrentAccelerometerData(
                             System.currentTimeMillis(),
                             sensorEvent.values[0],
@@ -278,28 +277,27 @@ public class MainService extends Service {
                             sensorEvent.values[2]
                     );
 
-                    if(isInDebugState) {
+                    if (isInDebugState) {
                         Log.e("onSensorChanged", "new data: x=" + sensorEvent.values[0] + "; y="
                                 + sensorEvent.values[1] + "; z=" + sensorEvent.values[2] + ";");
                     }
                 }
             }
-
-            if(!isRunning){
+            if (!isRunning) {
                 finalizeSensorWorkAndPostDataToFirebase();
-                if(isInDebugState) {
+                if (isInDebugState) {
                     Log.e("MainServiceRunnable", "call mScheduleTaskExecutor.shutdown()");
                 }
                 mScheduleTaskExecutor.shutdown();
-                if(isInDebugState) {
+                if (isInDebugState) {
                     Log.e("MainServiceRunnable", "call mMainService.stopForeground(true)");
                 }
                 stopForeground(true);
-                if(isInDebugState) {
+                if (isInDebugState) {
                     Log.e("MainServiceRunnable", "call mMainService.stopSelf()");
                 }
                 mMainService.stopSelf();
-                if(isInDebugState) {
+                if (isInDebugState) {
                     Log.e("MainServiceRunnable", "stope!");
                 }
             }
@@ -310,7 +308,7 @@ public class MainService extends Service {
             //do nothing.
         }
 
-        private void finalizeSensorWorkAndPostDataToFirebase(){
+        private void finalizeSensorWorkAndPostDataToFirebase() {
             mSensorManager.unregisterListener(this);
             mSessionItem.setStopTime(System.currentTimeMillis());
             postDataToFirebaseAndShutdown();
@@ -320,15 +318,14 @@ public class MainService extends Service {
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
         }
 
-        private void postDataToFirebaseAndShutdown(){
-            if(isInDebugState) {
+        private void postDataToFirebaseAndShutdown() {
+            if (isInDebugState) {
                 Log.e("MainServiceRunnable", "postDataToFirebaseAndShutdown");
             }
             mDatabase.child(Config.FIREBASE_DB_PATH_USERS).child(mUser.getUserUid()).setValue(mUser);
             mDatabase.child(Config.FIREBASE_DB_PATH_SESSIONS_ITEM).child(mUser.getUserUid()).push().setValue(mSessionItem);
         }
     }
-
 
 
     private class DataFilterRunnable implements Runnable {

@@ -13,28 +13,31 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+
+        <activity android:name=".activities.LaunchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".SignInActivity" />
+        <activity android:name=".activities.MainActivity" />
 
-        <activity android:name=".SettingsActivity" android:label="@string/action_settings" />
+        <activity android:name=".activities.SignInActivity" />
+
+        <activity android:name=".activities.SettingsActivity" android:label="@string/action_settings" />
 
         <service
-            android:name=".MainService"
+            android:name=".services.MainService"
             android:exported="false" />
 
         <receiver android:enabled="false"
-            android:name=".OnBootReceiver">
+            android:name=".receivers.OnBootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".OnAlarmReceiver" />
+        <receiver android:name=".receivers.OnAlarmReceiver" />
     </application>
 
 </manifest>

@@ -11,7 +11,7 @@ public abstract class Config {
     public static final String FIREBASE_DB_PATH_SESSIONS_ITEM = "sessionsItem";
     public static final String FIREBASE_DB_PATH_COORDINATES = "coordinates";
 
-    public static final String DATE_TIME_FULL_FORMAT = "yy.MM.dd hh:mm:ss.SSS";
+    public static final String DATE_TIME_FULL_FORMAT = "yy.MM.dd HH:mm:ss.SSS";
     public static final String TIME_FULL_FORMAT = "hh:mm:ss.SSS";
 
     public static final boolean IS_IN_DEBUG_STATE_MAIN_SERVICE = true;
@@ -21,6 +21,4 @@ public abstract class Config {
         throw new AssertionError();
     }
 
-    // TODO: 13/04/17 package organization check https://www.linkedin.com/pulse/android-package-structure-performance-tam-nguyen
-    // todo https://github.com/futurice/android-best-practices
 }

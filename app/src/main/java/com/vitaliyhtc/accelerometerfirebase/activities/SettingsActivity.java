@@ -1,4 +1,4 @@
-package com.vitaliyhtc.accelerometerfirebase;
+package com.vitaliyhtc.accelerometerfirebase.activities;
 
 import android.content.ComponentName;
 import android.content.Intent;
@@ -8,10 +8,12 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
+import com.vitaliyhtc.accelerometerfirebase.receivers.OnBootReceiver;
+import com.vitaliyhtc.accelerometerfirebase.R;
+
 public class SettingsActivity extends SettingsActivityAdapter {
 
-    // TODO: 12.04.17 code style. Check everywhere.
-    SharedPreferences prefs=null;
+    private SharedPreferences prefs = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,29 +52,26 @@ public class SettingsActivity extends SettingsActivityAdapter {
     }
 
 
-
     SharedPreferences.OnSharedPreferenceChangeListener onChange =
             new SharedPreferences.OnSharedPreferenceChangeListener() {
                 public void onSharedPreferenceChanged(SharedPreferences prefs,
                                                       String key) {
                     if (getResources().getString(R.string.config_pref_key_enable_service_start_setting).equals(key)) {
-                        boolean enabled=prefs.getBoolean(key, false);
-                        int flag=(enabled ?
+                        boolean enabled = prefs.getBoolean(key, false);
+                        int flag = (enabled ?
                                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
                                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
-                        ComponentName component=new ComponentName(SettingsActivity.this, OnBootReceiver.class);
+                        ComponentName component = new ComponentName(SettingsActivity.this, OnBootReceiver.class);
 
                         getPackageManager()
                                 .setComponentEnabledSetting(component, flag, PackageManager.DONT_KILL_APP);
 
                         if (enabled) {
                             OnBootReceiver.setAlarm(SettingsActivity.this);
-                        }
-                        else {
+                        } else {
                             OnBootReceiver.cancelAlarm(SettingsActivity.this);
                         }
-                    }
-                    else if (getResources().getString(R.string.config_pref_key_ServiceStartTime).equals(key)) {
+                    } else if (getResources().getString(R.string.config_pref_key_ServiceStartTime).equals(key)) {
                         OnBootReceiver.cancelAlarm(SettingsActivity.this);
                         OnBootReceiver.setAlarm(SettingsActivity.this);
                     }
