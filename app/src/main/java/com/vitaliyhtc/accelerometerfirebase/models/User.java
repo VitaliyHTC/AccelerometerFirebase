@@ -7,8 +7,8 @@ public class User {
     private String userPhotoUrl;
 
 
-
-    public User() {}
+    public User() {
+    }
 
     public User(String userUid, String userName, String userEmail, String userPhotoUrl) {
         this.userUid = userUid;
@@ -16,7 +16,6 @@ public class User {
         this.userEmail = userEmail;
         this.userPhotoUrl = userPhotoUrl;
     }
-
 
 
     public String getUserUid() {

@@ -81,15 +81,14 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
     }
 
     private void initGraph() {
-        LineChart chart = (LineChart) getActivity().findViewById(R.id.lineChart1);
-
-        chart.getDescription().setEnabled(false);
-
-        chart.setData(getLineDataFromSessionItem(mSessionItem));
-
-        chart.getAxisRight().setEnabled(false);
-        chart.getXAxis().setEnabled(false);
-        chart.invalidate();
+        if (mSessionItem != null) {
+            LineChart chart = (LineChart) getActivity().findViewById(R.id.lineChart1);
+            chart.getDescription().setEnabled(false);
+            chart.setData(getLineDataFromSessionItem(mSessionItem));
+            chart.getAxisRight().setEnabled(false);
+            chart.getXAxis().setEnabled(false);
+            chart.invalidate();
+        }
     }
 
 

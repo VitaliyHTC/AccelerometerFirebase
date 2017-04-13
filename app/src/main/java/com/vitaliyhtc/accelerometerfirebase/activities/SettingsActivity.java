@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
+import com.vitaliyhtc.accelerometerfirebase.adapters.SettingsActivityAdapter;
 import com.vitaliyhtc.accelerometerfirebase.receivers.OnBootReceiver;
 import com.vitaliyhtc.accelerometerfirebase.R;
 

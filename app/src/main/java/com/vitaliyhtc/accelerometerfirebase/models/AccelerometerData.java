@@ -7,8 +7,8 @@ public class AccelerometerData {
     private float z;
 
 
-
-    public AccelerometerData() {}
+    public AccelerometerData() {
+    }
 
     public AccelerometerData(long timeStamp, float x, float y, float z) {
         this.timeStamp = timeStamp;
@@ -16,7 +16,6 @@ public class AccelerometerData {
         this.y = y;
         this.z = z;
     }
-
 
 
     public long getTimeStamp() {

@@ -12,7 +12,8 @@ public class Device {
     private String product;
     private int sdkInt;
 
-    public Device() {}
+    public Device() {
+    }
 
     public String getBoard() {
         return board;

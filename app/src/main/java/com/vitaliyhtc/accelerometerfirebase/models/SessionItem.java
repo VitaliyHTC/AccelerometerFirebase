@@ -11,8 +11,8 @@ public class SessionItem {
     private List<AccelerometerData> coordinates = new ArrayList<>();
 
 
-
-    public SessionItem() {}
+    public SessionItem() {
+    }
 
     public SessionItem(int interval, long startTime, long stopTime, Device deviceInfo, List<AccelerometerData> coordinates) {
         this.interval = interval;
@@ -58,7 +58,7 @@ public class SessionItem {
         return coordinates;
     }
 
-    public void addCoordinate(AccelerometerData coordinate){
+    public void addCoordinate(AccelerometerData coordinate) {
         coordinates.add(coordinate);
     }
 

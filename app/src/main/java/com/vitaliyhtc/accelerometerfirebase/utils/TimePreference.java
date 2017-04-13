@@ -93,8 +93,7 @@ public class TimePreference extends DialogPreference {
     }
 
 
-
-    private static int parse24hTimeString(String value, int whatToReturn){
+    private static int parse24hTimeString(String value, int whatToReturn) {
         int hourOfDay = 0;
         int minute = 0;
         try {

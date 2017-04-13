@@ -153,83 +153,6 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, R.string.error_toast_google_play_services_error, Toast.LENGTH_SHORT).show();
     }
 
-    private void restoreFromSavedInstanceState(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            isMainServiceRunning = savedInstanceState.getBoolean(KEY_IS_MAIN_SERVICE_RUNNING, false);
-            mLastDisplayedFragment = savedInstanceState.getInt(KEY_DISPLAYED_FRAGMENT_ID, VALUE_FRAGMENT_HISTORY);
-            mLastDisplayedSessionItemKey = savedInstanceState.getString(KEY_DISPLAYED_SESSION_ITEM_KEY, VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF);
-        } else {
-            mLastDisplayedFragment = VALUE_FRAGMENT_HISTORY;
-        }
-        if (isMyServiceRunning(MainService.class)) {
-            isMainServiceRunning = true;
-        }
-        if (isMainServiceRunning) {
-            mButtonStart.setEnabled(false);
-        }
-    }
-
-    private void verifyAuth() {
-        // Initialize Firebase Auth
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        if (mFirebaseUser != null) {
-            displayUserNameAndImage();
-            enableControlButtons();
-        }
-    }
-
-    private void performBroadcastReceiverRegistration() {
-        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                isMainServiceRunning = intent.getExtras().getBoolean(Config.TAG_SERVICE_RUNNING_STATUS, false);
-                if (isMainServiceRunning) {
-                    mButtonStart.setEnabled(false);
-                } else {
-                    mButtonStart.setEnabled(true);
-                }
-            }
-        };
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
-                new IntentFilter(Config.TAG_ACTIVITY_BROADCAST_RECEIVER));
-    }
-
-
-    /* Helper methods ************************************************************************* **/
-    private void displayUserNameAndImage() {
-        Picasso.with(getApplicationContext()).load(mFirebaseUser.getPhotoUrl())
-                .into(mUserImageView);
-        mUserNameView.setText(mFirebaseUser.getDisplayName());
-    }
-
-    private void displayAnonymousUser() {
-        Picasso.with(getApplicationContext()).load(R.drawable.ic_account_circle_black_36dp)
-                .into(mUserImageView);
-        mUserNameView.setText(ANONYMOUS);
-    }
-
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void enableControlButtons() {
-        mButtonStart.setEnabled(true);
-        mButtonStop.setEnabled(true);
-    }
-
-    private void disableControlButtons() {
-        mButtonStart.setEnabled(false);
-        mButtonStop.setEnabled(false);
-    }
-
-
 
     /* Buttons, onClick, etc... *************************************************************** **/
 
@@ -277,7 +200,55 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void displayHistoryItemByKey(String sessionItemKey) {
+        mLastDisplayedSessionItemKey = sessionItemKey;
+        showAsList();
+    }
+
     /* **************************************************************************************** **/
+
+    private void restoreFromSavedInstanceState(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            isMainServiceRunning = savedInstanceState.getBoolean(KEY_IS_MAIN_SERVICE_RUNNING, false);
+            mLastDisplayedFragment = savedInstanceState.getInt(KEY_DISPLAYED_FRAGMENT_ID, VALUE_FRAGMENT_HISTORY);
+            mLastDisplayedSessionItemKey = savedInstanceState.getString(KEY_DISPLAYED_SESSION_ITEM_KEY, VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF);
+        } else {
+            mLastDisplayedFragment = VALUE_FRAGMENT_HISTORY;
+        }
+        if (isMyServiceRunning(MainService.class)) {
+            isMainServiceRunning = true;
+        }
+        if (isMainServiceRunning) {
+            mButtonStart.setEnabled(false);
+        }
+    }
+
+    private void verifyAuth() {
+        // Initialize Firebase Auth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser != null) {
+            displayUserNameAndImage();
+            enableControlButtons();
+        }
+    }
+
+    private void performBroadcastReceiverRegistration() {
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                isMainServiceRunning = intent.getExtras().getBoolean(Config.TAG_SERVICE_RUNNING_STATUS, false);
+                if (isMainServiceRunning) {
+                    mButtonStart.setEnabled(false);
+                } else {
+                    mButtonStart.setEnabled(true);
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+                new IntentFilter(Config.TAG_ACTIVITY_BROADCAST_RECEIVER));
+    }
 
     private void initFragments() {
         Fragment fragment;
@@ -294,15 +265,40 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
     private void replaceFragment(Fragment fragment) {
         mFragmentManager.beginTransaction().replace(R.id.container_view, fragment).commit();
     }
 
-
-    @Override
-    public void displayHistoryItemByKey(String sessionItemKey) {
-        mLastDisplayedSessionItemKey = sessionItemKey;
-        showAsList();
+    private void displayUserNameAndImage() {
+        Picasso.with(getApplicationContext()).load(mFirebaseUser.getPhotoUrl())
+                .into(mUserImageView);
+        mUserNameView.setText(mFirebaseUser.getDisplayName());
     }
+
+    private void displayAnonymousUser() {
+        Picasso.with(getApplicationContext()).load(R.drawable.ic_account_circle_black_36dp)
+                .into(mUserImageView);
+        mUserNameView.setText(ANONYMOUS);
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void enableControlButtons() {
+        mButtonStart.setEnabled(true);
+        mButtonStop.setEnabled(true);
+    }
+
+    private void disableControlButtons() {
+        mButtonStart.setEnabled(false);
+        mButtonStop.setEnabled(false);
+    }
+
 }
