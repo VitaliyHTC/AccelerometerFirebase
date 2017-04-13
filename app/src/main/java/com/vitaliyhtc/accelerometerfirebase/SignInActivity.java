@@ -41,10 +41,12 @@ public class SignInActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
+        // TODO: 13/04/17 butterknife?
         // Assign fields
         mSignInButton = (SignInButton) findViewById(R.id.sign_in_button);
 
         // Set click listeners
+
         mSignInButton.setOnClickListener(this);
 
         // Configure Google Sign In

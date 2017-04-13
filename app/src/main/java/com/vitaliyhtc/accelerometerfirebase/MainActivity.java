@@ -77,9 +77,7 @@ public class MainActivity extends AppCompatActivity
     private String mLastDisplayedSessionItemKey;
 
 
-    // TODO: 12.04.17 There is a onRestoreInstanceState method, which is called only if the state is not null
-    // so you don't need to check if instance is null
-    // Also it would keep on create cleaner
+
     // TODO: 12.04.17 Method hierarchy. First public/protected and then private
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,6 +131,7 @@ public class MainActivity extends AppCompatActivity
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
+            // TODO: 13/04/17 better to create separate splash activity and inside if user logged in -> MainActivity else SignInActivity 
             startActivity(new Intent(this, SignInActivity.class));
             finish();
             return;

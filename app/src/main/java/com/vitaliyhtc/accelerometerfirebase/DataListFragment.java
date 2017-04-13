@@ -78,6 +78,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
                 .child(mSessionItemKey)
                 .child(FIREBASE_DB_PATH_COORDINATES);
 
+        // TODO: 13/04/17 better to create own adapter class and move all logic there
         FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder> firebaseAdapter = new FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder>(
                 AccelerometerData.class,
                 R.layout.list_item_accelerometer_data,

@@ -7,36 +7,38 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TimePicker;
 
+// TODO: 13/04/17  AndroidStudio shortcut to fix code style Ctrl + Alt + L
 public class TimePreference extends DialogPreference {
-    private int lastHour=0;
-    private int lastMinute=0;
-    private TimePicker picker=null;
+    private int lastHour = 0;
+    private int lastMinute = 0;
+    private TimePicker picker = null;
 
-    // TODO: 12.04.17 format code
+    // TODO: 12.04.17 use simple date format to parse date/time
     public static int getHour(String time) {
-        String[] pieces=time.split(":");
+        String[] pieces = time.split(":");
 
-        return(Integer.parseInt(pieces[0]));
+        return (Integer.parseInt(pieces[0]));
     }
 
     public static int getMinute(String time) {
-        String[] pieces=time.split(":");
+        String[] pieces = time.split(":");
 
-        return(Integer.parseInt(pieces[1]));
+        return (Integer.parseInt(pieces[1]));
     }
 
     public TimePreference(Context ctxt, AttributeSet attrs) {
         super(ctxt, attrs);
 
+        // TODO: 13/04/17 avoid hardcode visible to user
         setPositiveButtonText("Set");
         setNegativeButtonText("Cancel");
     }
 
     @Override
     protected View onCreateDialogView() {
-        picker=new TimePicker(getContext());
+        picker = new TimePicker(getContext());
         picker.setIs24HourView(true);
-        return(picker);
+        return (picker);
     }
 
     @Override
@@ -52,10 +54,10 @@ public class TimePreference extends DialogPreference {
         super.onDialogClosed(positiveResult);
 
         if (positiveResult) {
-            lastHour=picker.getCurrentHour();
-            lastMinute=picker.getCurrentMinute();
+            lastHour = picker.getCurrentHour();
+            lastMinute = picker.getCurrentMinute();
 
-            String time=String.valueOf(lastHour)+":"+String.valueOf(lastMinute);
+            String time = String.valueOf(lastHour) + ":" + String.valueOf(lastMinute);
 
             if (callChangeListener(time)) {
                 persistString(time);
@@ -65,26 +67,24 @@ public class TimePreference extends DialogPreference {
 
     @Override
     protected Object onGetDefaultValue(TypedArray a, int index) {
-        return(a.getString(index));
+        return (a.getString(index));
     }
 
     @Override
     protected void onSetInitialValue(boolean restoreValue, Object defaultValue) {
-        String time=null;
+        String time = null;
 
         if (restoreValue) {
-            if (defaultValue==null) {
-                time=getPersistedString("00:00");
+            if (defaultValue == null) {
+                time = getPersistedString("00:00");
+            } else {
+                time = getPersistedString(defaultValue.toString());
             }
-            else {
-                time=getPersistedString(defaultValue.toString());
-            }
-        }
-        else {
-            time=defaultValue.toString();
+        } else {
+            time = defaultValue.toString();
         }
 
-        lastHour=getHour(time);
-        lastMinute=getMinute(time);
+        lastHour = getHour(time);
+        lastMinute = getMinute(time);
     }
 }

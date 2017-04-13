@@ -30,12 +30,12 @@ import java.util.List;
 import static com.vitaliyhtc.accelerometerfirebase.Config.FIREBASE_DB_PATH_SESSIONS_ITEM;
 
 // TODO: 12.04.17  package hierarchy, fragment in the fragment package, activity in activity, adapter, service etc.
-// TODO: 12.04.17 Also it would be better to make some FirebaseHelper.class to work with firebase queries
+// TODO: 12.04.17 Also it would be better to make some FirebaseHelper class to work with firebase queries
 public class DataGraphFragment extends Fragment implements SessionItemFragment {
 
     private String mSessionItemKey;
 
-    // TODO: 12.04.17 read about fragment-activity interactions
+    // TODO: 12.04.17 read about fragment-activity interactions, do it right way
     private ActivityToDataFragment mActivityToFragment;
 
     private DatabaseReference mDatabase;
@@ -105,7 +105,7 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
     }
 
 
-    // TODO: 12.04.17 Method should do only one thing. Check everywhere
+    // TODO: 12.04.17 Method should do only one thing, can be LineData getLineData(List<AccelerometerData>). Check everywhere
     private LineData getData(){
         ArrayList<ILineDataSet> sets = new ArrayList<>();
 

@@ -20,4 +20,7 @@ public abstract class Config {
     private Config() {
         throw new AssertionError();
     }
+
+    // TODO: 13/04/17 package organization check https://www.linkedin.com/pulse/android-package-structure-performance-tam-nguyen
+    // todo https://github.com/futurice/android-best-practices
 }
