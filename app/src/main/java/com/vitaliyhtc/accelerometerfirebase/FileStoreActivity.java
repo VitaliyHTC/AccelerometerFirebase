@@ -6,6 +6,11 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 import butterknife.ButterKnife;
 
 /**
@@ -21,6 +26,11 @@ import butterknife.ButterKnife;
 public class FileStoreActivity extends AppCompatActivity {
 
 
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+
+    private FirebaseStorage mStorage;
+    private StorageReference mStorageReference;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -30,7 +40,7 @@ public class FileStoreActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-
+        init();
     }
 
 
@@ -47,5 +57,15 @@ public class FileStoreActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+
+
+    private void init(){
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+        mStorage = FirebaseStorage.getInstance();
+        mStorageReference = mStorage.getReference();
     }
 }

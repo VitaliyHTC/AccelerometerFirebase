@@ -6,10 +6,58 @@
     android:layout_height="match_parent"
     >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello FileStore!"
+    <LinearLayout
+        android:id="@+id/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/tools_ib_navigate_to_root_directory"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_storage_black_32dp"
+            android:contentDescription="@string/filestore_tools_navigate_to_root_directory"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_create_new_directory"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_create_new_folder_black_32dp"
+            android:contentDescription="@string/filestore_tools_create_new_directory"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_upload_file"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_file_upload_black_32dp"
+            android:contentDescription="@string/filestore_tools_upload_button"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_download_file"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_file_download_black_32dp"
+            android:contentDescription="@string/filestore_tools_download_button"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_delete_file"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_delete_black_32dp"
+            android:contentDescription="@string/filestore_tools_delete_button"
+            />
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         />
 
 </RelativeLayout>

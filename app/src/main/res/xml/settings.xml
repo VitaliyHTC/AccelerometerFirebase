@@ -2,7 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/pref_app">
         <ListPreference
-            android:icon="@drawable/ic_timer_black_24dp"
+            android:icon="@drawable/ic_timer_black_32dp"
             android:title="@string/pref_app_logging_interval"
             android:key="@string/config_pref_key_LoggingInterval"
             android:summary="@string/pref_app_logging_interval_sum"
@@ -17,7 +17,7 @@
             android:defaultValue="false"
             />
         <com.vitaliyhtc.accelerometerfirebase.utils.TimePreference
-            android:icon="@drawable/ic_access_alarm_black_24dp"
+            android:icon="@drawable/ic_access_alarm_black_32dp"
             android:title="@string/pref_app_service_start_time"
             android:key="@string/config_pref_key_ServiceStartTime"
             android:summary="@string/pref_app_service_start_time_sum"
@@ -31,7 +31,7 @@
             android:defaultValue="true"
             />
         <com.vitaliyhtc.accelerometerfirebase.utils.TimePreference
-            android:icon="@drawable/ic_access_alarm_black_24dp"
+            android:icon="@drawable/ic_access_alarm_black_32dp"
             android:title="@string/pref_app_session_length"
             android:key="@string/config_pref_key_SessionLength"
             android:summary="@string/pref_app_session_length_sum"

@@ -35,6 +35,11 @@
     <string name="launch_title">What to launch?</string>
     <string name="launch_accelerometer">Accelerometer</string>
     <string name="launch_filestore">FileStore</string>
+    <string name="filestore_tools_upload_button">Upload file</string>
+    <string name="filestore_tools_navigate_to_root_directory">Navigate to root directory</string>
+    <string name="filestore_tools_create_new_directory">Create new directory</string>
+    <string name="filestore_tools_download_button">Download file</string>
+    <string name="filestore_tools_delete_button">Delete file</string>
 
     <!--
     <string name="config_pref_key_"></string>
