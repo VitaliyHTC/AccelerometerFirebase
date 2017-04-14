@@ -8,6 +8,7 @@ public abstract class Config {
     public static final String TAG_SERVICE_RUNNING_STATUS = "MainServiceRunningStatus";
 
     public static final String FIREBASE_DB_PATH_USERS = "users";
+    public static final String FIREBASE_DB_PATH_FILES = "files";
     public static final String FIREBASE_DB_PATH_SESSIONS_ITEM = "sessionsItem";
     public static final String FIREBASE_DB_PATH_COORDINATES = "coordinates";
 
