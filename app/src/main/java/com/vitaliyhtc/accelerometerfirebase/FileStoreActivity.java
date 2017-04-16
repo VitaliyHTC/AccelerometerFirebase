@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -60,7 +61,6 @@ public class FileStoreActivity extends AppCompatActivity {
         init();
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
@@ -74,7 +74,6 @@ public class FileStoreActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-
 
     private void init() {
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -105,6 +104,7 @@ public class FileStoreActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_SELECT_FILE) {
+            mUrisOfFilesToUpload.clear();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ClipData clipData = data.getClipData();
                 for (int i = 0; i < clipData.getItemCount(); i++) {
@@ -123,7 +123,7 @@ public class FileStoreActivity extends AppCompatActivity {
         // mDatabase.child(Config.FIREBASE_DB_PATH_FILES).child(mUser.getUserUid()).setValue(mFiles);
 
         for (Uri fileUri : uris) {
-            Log.e(TAG, "performFileUploadingByUri: " + fileUri+"; Name: "+getFilenamefromUri(this, fileUri));
+            Log.e(TAG, "performFileUploadingByUri: " + fileUri + "; Name: " + getPath(fileUri));
 
             // http://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
             // See dexter, and add read external storage permission in manifest and realtime permission for android 6+
@@ -133,44 +133,28 @@ public class FileStoreActivity extends AppCompatActivity {
         }
     }
 
+    private String getPath(Uri uri) {
+        String path = null;
+        String[] projection = {
+                MediaStore.MediaColumns.DATA,
+                MediaStore.MediaColumns.SIZE,
+                MediaStore.MediaColumns.DISPLAY_NAME,
+                MediaStore.MediaColumns.MIME_TYPE
+        };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor == null) {
+            path = uri.getPath();
+        } else {
+            cursor.moveToFirst();
+            int column_index = cursor.getColumnIndexOrThrow(projection[0]);
+            path = cursor.getString(column_index);
 
-    public static String getFilenamefromUri(Context context, Uri uri) {
+            // Create FileInfo model to store DATA, SIZE, DISPLAY_NAME, MIMI_TYPE
+            // See ContentResolver, MediaStore.
 
-        ContentResolver resolver = context.getContentResolver();
-        Cursor cursor = resolver.query(uri, null, null, null, null);
-        String displayName = null;
-        if (cursor != null && cursor.moveToFirst()) {
-
-            // Note it's called "Display Name".  This is
-            // provider-specific, and might not necessarily be the file name.
-            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
             cursor.close();
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            displayName = uri.getPath().replaceAll(".*/", "");
-        } else displayName = "unknown filename";
-        return displayName;
-    }
-
-    public static String getPath(Context context, Uri uri) throws URISyntaxException {
-        if ("content".equalsIgnoreCase(uri.getScheme())) {
-            String[] projection = {"_data"};
-            Cursor cursor = null;
-
-            try {
-                cursor = context.getContentResolver().query(uri, projection, null, null, null);
-                int column_index = cursor
-                        .getColumnIndexOrThrow("_data");
-                if (cursor.moveToFirst()) {
-                    return cursor.getString(column_index);
-                }
-            } catch (Exception e) {
-                // Eat it
-            }
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
         }
-
-        return null;
+        return ((path == null || path.isEmpty()) ? (uri.getPath()) : path);
     }
 
 
