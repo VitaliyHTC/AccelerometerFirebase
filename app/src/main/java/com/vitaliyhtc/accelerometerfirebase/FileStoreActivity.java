@@ -1,28 +1,39 @@
 package com.vitaliyhtc.accelerometerfirebase;
 
 import android.content.ClipData;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.provider.OpenableColumns;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.vitaliyhtc.accelerometerfirebase.model.UploadTaskListeners;
+import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnDevice;
+import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnStorage;
+import com.vitaliyhtc.accelerometerfirebase.model.FileStoreUploadedFiles;
+import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 
-import java.net.URISyntaxException;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -41,14 +52,15 @@ public class FileStoreActivity extends AppCompatActivity {
 
     private static final String TAG = "FileStoreActivity";
     private static final int REQUEST_CODE_SELECT_FILE = 0x0010;
+    private static final String STORAGE_REFERENCE_FILES = "files";
+    private static final String DATABASE_REFERENCE_FILES = "files";
 
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
-
-    private FirebaseStorage mStorage;
     private StorageReference mStorageReference;
+    private DatabaseReference mDatabaseReference;
 
-    private List<Uri> mUrisOfFilesToUpload;
+    private FileStoreUploadedFiles mUploadedFilesInfo;
+    private List<UploadTask> mUploadTasks;
+    private Map<UploadTask, UploadTaskListeners> mUploadTaskListeners;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +71,62 @@ public class FileStoreActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         init();
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // If there's an upload in progress, save the reference so you can query it later
+        if (mStorageReference != null) {
+            outState.putString("reference", mStorageReference.toString());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // If there was an upload in progress, get its reference and create a new StorageReference
+        final String stringRef = savedInstanceState.getString("reference");
+        if (stringRef == null) {
+            return;
+        }
+        mStorageReference = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
+
+        // Find all UploadTasks under this StorageReference (in this example, there should be one)
+        mUploadTasks = mStorageReference.getActiveUploadTasks();
+        performFileUploadingByUploadTasks(mUploadTasks);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        for (UploadTask uploadTask : mUploadTasks) {
+            uploadTask.pause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        for (UploadTask uploadTask : mUploadTasks) {
+            uploadTask.resume();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        for (UploadTask uploadTask : mUploadTasks) {
+            UploadTaskListeners uploadTaskListeners = mUploadTaskListeners.get(uploadTask);
+            uploadTask.removeOnFailureListener(uploadTaskListeners.getOnFailureListener());
+            uploadTask.removeOnSuccessListener(uploadTaskListeners.getOnSuccessListener());
+            uploadTask.removeOnPausedListener(uploadTaskListeners.getOnPausedListener());
+            uploadTask.removeOnProgressListener(uploadTaskListeners.getOnProgressListener());
+        }
     }
 
     @Override
@@ -73,16 +141,6 @@ public class FileStoreActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void init() {
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-
-        mStorage = FirebaseStorage.getInstance();
-        mStorageReference = mStorage.getReference();
-
-        mUrisOfFilesToUpload = new ArrayList<>();
     }
 
     @OnClick(R.id.tools_ib_upload_file)
@@ -104,58 +162,131 @@ public class FileStoreActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_SELECT_FILE) {
-            mUrisOfFilesToUpload.clear();
+            List<Uri> urisOfFilesToUpload = new ArrayList<>();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ClipData clipData = data.getClipData();
                 for (int i = 0; i < clipData.getItemCount(); i++) {
-                    mUrisOfFilesToUpload.add(clipData.getItemAt(i).getUri());
+                    urisOfFilesToUpload.add(clipData.getItemAt(i).getUri());
                 }
             } else {
-                mUrisOfFilesToUpload.add(data.getData());
+                urisOfFilesToUpload.add(data.getData());
             }
-            performFileUploadingByUri(mUrisOfFilesToUpload);
+            performFileUploadingByUri(urisOfFilesToUpload);
         }
     }
+
+    private void init() {
+        mStorageReference = FirebaseStorage.getInstance().getReference()
+                .child(STORAGE_REFERENCE_FILES)
+                .child(Utils.getCurrentUserUid());
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference()
+                .child(DATABASE_REFERENCE_FILES)
+                .child(Utils.getCurrentUserUid());
+
+        mUploadTasks = new ArrayList<>();
+        mUploadTaskListeners = new HashMap<>();
+
+        mDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mUploadedFilesInfo = dataSnapshot.getValue(FileStoreUploadedFiles.class);
+                if (mUploadedFilesInfo == null) {
+                    mUploadedFilesInfo = new FileStoreUploadedFiles();
+                }
+                //showUploadedFiles(mUploadedFilesUrls);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+            }
+        });
+    }
+
+    // TODO: read/write files permissions request for android 6+
+    // http://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
+    // See dexter, and add read external storage permission in manifest and realtime permission for android 6+
+    // Media store for path by uri
 
     private void performFileUploadingByUri(List<Uri> uris) {
-        // see https://github.com/haiwen/seadroid/blob/master/app/src/main/java/com/seafile/seadroid2/util/Utils.java line 524
-        // TODO: all below
-        // mDatabase.child(Config.FIREBASE_DB_PATH_FILES).child(mUser.getUserUid()).setValue(mFiles);
-
         for (Uri fileUri : uris) {
-            Log.e(TAG, "performFileUploadingByUri: " + fileUri + "; Name: " + getPath(fileUri));
+            FileInfoOnDevice fileInfoOnDevice = FileInfoOnDevice.getFileInfo(FileStoreActivity.this, fileUri);
+            if (fileInfoOnDevice != null) {
+                /*
+                Log.e(TAG, "URI: " + fileUri + "; Path: " + fileInfoOnDevice.getPathToTheFile() +
+                        "; Size: " + fileInfoOnDevice.getSize() + "; Name: " + fileInfoOnDevice.getFileName() +
+                        "; MimeType: " + fileInfoOnDevice.getMimeType() + ";");
+                */
 
-            // http://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
-            // See dexter, and add read external storage permission in manifest and realtime permission for android 6+
-            // Media store for path by uri
+                Uri file = Uri.fromFile(new File(fileInfoOnDevice.getPathToTheFile()));
+                StorageReference riversRef = mStorageReference.child(fileInfoOnDevice.getFileName());
+                final UploadTask uploadTask = riversRef.putFile(file);
+                mUploadTasks.add(uploadTask);
+            }
+        }
+        performFileUploadingByUploadTasks(mUploadTasks);
+    }
 
-            //mStorageReference.child(Config.FIREBASE_DB_PATH_FILES).child(Utils.getCurrentUserUid()).child(fileUri.getLastPathSegment());
+    private void performFileUploadingByUploadTasks(List<UploadTask> uploadTasks) {
+        for (UploadTask uploadTask : uploadTasks) {
+            // TODO: UI for loading init here
+            registerListenersForUploadTask(uploadTask);
         }
     }
 
-    private String getPath(Uri uri) {
-        String path = null;
-        String[] projection = {
-                MediaStore.MediaColumns.DATA,
-                MediaStore.MediaColumns.SIZE,
-                MediaStore.MediaColumns.DISPLAY_NAME,
-                MediaStore.MediaColumns.MIME_TYPE
+    private void registerListenersForUploadTask(final UploadTask uploadTask) {
+
+        OnFailureListener onFailureListener = new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e(TAG, "onFailure: ", exception);
+            }
         };
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if (cursor == null) {
-            path = uri.getPath();
-        } else {
-            cursor.moveToFirst();
-            int column_index = cursor.getColumnIndexOrThrow(projection[0]);
-            path = cursor.getString(column_index);
 
-            // Create FileInfo model to store DATA, SIZE, DISPLAY_NAME, MIMI_TYPE
-            // See ContentResolver, MediaStore.
+        OnSuccessListener<UploadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @SuppressWarnings("VisibleForTests")
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
 
-            cursor.close();
-        }
-        return ((path == null || path.isEmpty()) ? (uri.getPath()) : path);
+                mUploadedFilesInfo.getUploadedFilesInfo().add(new FileInfoOnStorage(
+                        taskSnapshot.getMetadata().getName(),
+                        taskSnapshot.getMetadata().getPath(),
+                        taskSnapshot.getDownloadUrl().toString(),
+                        taskSnapshot.getTotalByteCount(),
+                        taskSnapshot.getMetadata().getContentType()
+                ));
+
+                mDatabaseReference.setValue(mUploadedFilesInfo);
+                mUploadTasks.remove(uploadTask);
+            }
+        };
+
+        OnPausedListener<UploadTask.TaskSnapshot> onPausedListener = new OnPausedListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("Upload is paused");
+            }
+        };
+
+        OnProgressListener<UploadTask.TaskSnapshot> onProgressListener = new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @SuppressWarnings("VisibleForTests")
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                System.out.println("Upload is " + progress + "% done");
+            }
+        };
+
+        mUploadTaskListeners.put(
+                uploadTask,
+                new UploadTaskListeners(
+                        onFailureListener, onSuccessListener, onPausedListener, onProgressListener)
+        );
+
+        uploadTask.addOnFailureListener(onFailureListener);
+        uploadTask.addOnSuccessListener(onSuccessListener);
+        uploadTask.addOnPausedListener(onPausedListener);
+        uploadTask.addOnProgressListener(onProgressListener);
     }
-
 
 }
