@@ -38,7 +38,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:visibility="gone"
-            android:src="@drawable/ic_file_upload_black_32dp"
+            android:src="@drawable/ic_file_upload_grey_32dp"
             android:contentDescription="@string/filestore_tools_upload_button"
             />
     </RelativeLayout>

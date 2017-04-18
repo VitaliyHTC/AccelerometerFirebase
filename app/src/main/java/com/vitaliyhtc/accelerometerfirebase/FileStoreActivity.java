@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -27,6 +29,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
@@ -60,7 +63,6 @@ import butterknife.OnClick;
  * окей, тоді firebase, треба трохи переробити.
  * +++ Після логінізації екран з двома кнопками "Accelerometer" i "FileStore",
  * +++ При кліку на першу кнопку переход на твоє завдання фактично,
- * <p>
  * TODO: 2017.04.12
  * +++ при кліку на другу кнопку відкривається новий скрін
  * +++ де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
@@ -161,7 +163,7 @@ public class FileStoreActivity extends AppCompatActivity {
         Intent intent;
         switch (item.getItemId()) {
             case android.R.id.home:
-                intent = new Intent(this, LaunchActivity.class);
+                intent = new Intent(FileStoreActivity.this, LaunchActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
                 return true;
@@ -203,20 +205,22 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void requestWriteExternalStoragePermission() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(FileStoreActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             init();
         } else {
-            Dexter.withActivity(this)
+            Dexter.withActivity(FileStoreActivity.this)
                     .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     .withListener(new PermissionListener() {
                         @Override
                         public void onPermissionGranted(PermissionGrantedResponse response) {
                             init();
                         }
+
                         @Override
                         public void onPermissionDenied(PermissionDeniedResponse response) {
                             onPermissionDeniedResume(response);
                         }
+
                         @Override
                         public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
                             onPermissionRationaleShouldBeShownResume(permission, token);
@@ -274,6 +278,7 @@ public class FileStoreActivity extends AppCompatActivity {
                     mUploadedFilesInfo = new FileStoreUploadedFiles();
                 }
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
@@ -299,13 +304,13 @@ public class FileStoreActivity extends AppCompatActivity {
         ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDownloadClickListener(new FileInfoOnStorageViewHolder.DownloadClickListener() {
             @Override
             public void onItemClickDownload(int position) {
-                // TODO: download button realization.
+                actionDownloadFile(mFirebaseAdapter.getItem(position));
             }
         });
         ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDeleteClickListener(new FileInfoOnStorageViewHolder.DeleteClickListener() {
             @Override
             public void onItemClickDelete(int position) {
-                // TODO: delete button realization.
+                actionDeleteFile(mFirebaseAdapter.getItem(position));
             }
         });
 
@@ -314,11 +319,7 @@ public class FileStoreActivity extends AppCompatActivity {
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
                 int fileItemsCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition =
-                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                // If the recycler view is initially being loaded or the
-                // user is at the bottom of the list, scroll to the bottom
-                // of the list to show the newly added file items.
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 if (lastVisiblePosition == -1 ||
                         (positionStart >= (fileItemsCount - 1) &&
                                 lastVisiblePosition == (positionStart - 1))) {
@@ -342,8 +343,8 @@ public class FileStoreActivity extends AppCompatActivity {
                 */
 
                 Uri file = Uri.fromFile(new File(fileInfoOnDevice.getPathToTheFile()));
-                StorageReference riversRef = mStorageReference.child(fileInfoOnDevice.getFileName());
-                final UploadTask uploadTask = riversRef.putFile(file);
+                StorageReference fileRef = mStorageReference.child(fileInfoOnDevice.getFileName());
+                final UploadTask uploadTask = fileRef.putFile(file);
                 mUploadTasks.add(uploadTask);
             }
         }
@@ -355,6 +356,54 @@ public class FileStoreActivity extends AppCompatActivity {
             // TODO: init UI for uploading progress
             registerListenersForUploadTask(uploadTask);
         }
+    }
+
+    private void actionDownloadFile(final FileInfoOnStorage fileInfo) {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            StorageReference fileRef = mStorageReference.child(fileInfo.getFilename());
+            String baseDir = Environment.getExternalStorageDirectory().getAbsolutePath();
+            File file = new File(baseDir + File.separator + Environment.DIRECTORY_DOWNLOADS
+                    + File.separator + fileInfo.getFilename());
+
+            fileRef.getFile(file).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    Toast.makeText(
+                            FileStoreActivity.this,
+                            fileInfo.getFilename() + " downloaded to your ExternalStorage Download directory.",
+                            Toast.LENGTH_LONG
+                    ).show();
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.e(TAG, "actionDownloadFile.onFailure: ", exception);
+                    Toast.makeText(FileStoreActivity.this, "File downloading failed!", Toast.LENGTH_LONG).show();
+                }
+            });
+        } else {
+            Toast.makeText(FileStoreActivity.this,
+                    "No ExternalStorage found. Unable to download file.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void actionDeleteFile(final FileInfoOnStorage fileInfo) {
+        StorageReference fileRef = mStorageReference.child(fileInfo.getFilename());
+        fileRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(FileStoreActivity.this,
+                        fileInfo.getFilename() + " deleting successful!", Toast.LENGTH_LONG).show();
+                mUploadedFilesInfo.getUploadedFilesInfo().remove(fileInfo);
+                mDatabaseReference.setValue(mUploadedFilesInfo);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e(TAG, "actionDeleteFile.onFailure: ", exception);
+                Toast.makeText(FileStoreActivity.this, "File deleting failed!", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void registerListenersForUploadTask(final UploadTask uploadTask) {
@@ -371,7 +420,6 @@ public class FileStoreActivity extends AppCompatActivity {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-
                 mUploadedFilesInfo.getUploadedFilesInfo().add(new FileInfoOnStorage(
                         taskSnapshot.getMetadata().getName(),
                         taskSnapshot.getMetadata().getPath(),
@@ -379,7 +427,6 @@ public class FileStoreActivity extends AppCompatActivity {
                         taskSnapshot.getTotalByteCount(),
                         taskSnapshot.getMetadata().getContentType()
                 ));
-
                 mDatabaseReference.setValue(mUploadedFilesInfo);
                 mUploadTasks.remove(uploadTask);
             }
@@ -388,7 +435,7 @@ public class FileStoreActivity extends AppCompatActivity {
         OnPausedListener<UploadTask.TaskSnapshot> onPausedListener = new OnPausedListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                System.out.println("Upload is paused");
+                Log.i(TAG, "onPaused: Upload is paused");
             }
         };
 
