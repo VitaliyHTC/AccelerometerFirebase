@@ -1,16 +1,25 @@
 package com.vitaliyhtc.accelerometerfirebase;
 
 import android.content.ClipData;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -23,11 +32,19 @@ import com.google.firebase.storage.OnPausedListener;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.vitaliyhtc.accelerometerfirebase.model.UploadTaskListeners;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
+import com.vitaliyhtc.accelerometerfirebase.adapters.FileInfoOnStorageAdapter;
 import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnDevice;
 import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnStorage;
 import com.vitaliyhtc.accelerometerfirebase.model.FileStoreUploadedFiles;
+import com.vitaliyhtc.accelerometerfirebase.model.UploadTaskListeners;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
+import com.vitaliyhtc.accelerometerfirebase.viewholder.FileInfoOnStorageViewHolder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
@@ -44,9 +62,12 @@ import butterknife.OnClick;
  * +++ При кліку на першу кнопку переход на твоє завдання фактично,
  * <p>
  * TODO: 2017.04.12
- * при кліку на другу кнопку відкривається новий скрін де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
- * під час завантаження показується прогрес, завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
- * завантажені файли користувача записуються в окрему вітку бази і є можливість їх переглянути і скачати
+ * +++ при кліку на другу кнопку відкривається новий скрін
+ * +++ де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
+ * під час завантаження показується прогрес,
+ * +++ завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
+ * +++ завантажені файли користувача записуються в окрему вітку бази
+ * і є можливість їх переглянути і скачати
  */
 public class FileStoreActivity extends AppCompatActivity {
 
@@ -55,12 +76,19 @@ public class FileStoreActivity extends AppCompatActivity {
     private static final String STORAGE_REFERENCE_FILES = "files";
     private static final String DATABASE_REFERENCE_FILES = "files";
 
+    // same as name of list in FileStoreUploadedFiles
+    private static final String DATABASE_REFERENCE_FILE_LIST_NAME = "uploadedFilesInfo";
+    @BindView(R.id.recycler_view)
+    RecyclerView mRecyclerView;
+    @BindView(R.id.tools_ib_upload_file)
+    ImageView mUploadImageView;
     private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
-
     private FileStoreUploadedFiles mUploadedFilesInfo;
     private List<UploadTask> mUploadTasks;
     private Map<UploadTask, UploadTaskListeners> mUploadTaskListeners;
+    private FirebaseRecyclerAdapter<FileInfoOnStorage, FileInfoOnStorageViewHolder> mFirebaseAdapter;
+    private LinearLayoutManager mLinearLayoutManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,7 +98,7 @@ public class FileStoreActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        init();
+        requestWriteExternalStoragePermission();
     }
 
 
@@ -94,10 +122,9 @@ public class FileStoreActivity extends AppCompatActivity {
             return;
         }
         mStorageReference = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
-
-        // Find all UploadTasks under this StorageReference (in this example, there should be one)
-        mUploadTasks = mStorageReference.getActiveUploadTasks();
-        performFileUploadingByUploadTasks(mUploadTasks);
+        // Find all UploadTasks under this StorageReference
+        mUploadTasks.addAll(mStorageReference.getActiveUploadTasks());
+        performListenersRegistrationForUploadTasks(mUploadTasks);
     }
 
     @Override
@@ -161,7 +188,7 @@ public class FileStoreActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CODE_SELECT_FILE) {
+        if (requestCode == REQUEST_CODE_SELECT_FILE && data != null) {
             List<Uri> urisOfFilesToUpload = new ArrayList<>();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ClipData clipData = data.getClipData();
@@ -173,6 +200,59 @@ public class FileStoreActivity extends AppCompatActivity {
             }
             performFileUploadingByUri(urisOfFilesToUpload);
         }
+    }
+
+    private void requestWriteExternalStoragePermission() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            init();
+        } else {
+            Dexter.withActivity(this)
+                    .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    .withListener(new PermissionListener() {
+                        @Override
+                        public void onPermissionGranted(PermissionGrantedResponse response) {
+                            init();
+                        }
+                        @Override
+                        public void onPermissionDenied(PermissionDeniedResponse response) {
+                            onPermissionDeniedResume(response);
+                        }
+                        @Override
+                        public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                            onPermissionRationaleShouldBeShownResume(permission, token);
+                        }
+                    }).check();
+        }
+    }
+
+    private void onPermissionDeniedResume(PermissionDeniedResponse response) {
+        // TODO: show error. Unable to perform any operations with files. Permission denied. etc...
+    }
+
+    private void onPermissionRationaleShouldBeShownResume(PermissionRequest permission, final PermissionToken token) {
+        new AlertDialog.Builder(FileStoreActivity.this).setTitle(R.string.permission_rationale_title)
+                .setMessage(R.string.permission_rationale_message)
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        token.cancelPermissionRequest();
+                    }
+                })
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        token.continuePermissionRequest();
+                    }
+                })
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        token.cancelPermissionRequest();
+                    }
+                })
+                .show();
     }
 
     private void init() {
@@ -193,19 +273,63 @@ public class FileStoreActivity extends AppCompatActivity {
                 if (mUploadedFilesInfo == null) {
                     mUploadedFilesInfo = new FileStoreUploadedFiles();
                 }
-                //showUploadedFiles(mUploadedFilesUrls);
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
             }
         });
+
+        mUploadImageView.setVisibility(View.VISIBLE);
+
+        initFileList();
     }
 
-    // TODO: read/write files permissions request for android 6+
-    // http://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
-    // See dexter, and add read external storage permission in manifest and realtime permission for android 6+
-    // Media store for path by uri
+    private void initFileList() {
+        mLinearLayoutManager = new LinearLayoutManager(FileStoreActivity.this);
+        mLinearLayoutManager.setStackFromEnd(true);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+
+        mFirebaseAdapter = new FileInfoOnStorageAdapter(
+                FileInfoOnStorage.class,
+                R.layout.list_item_file_info_on_storage,
+                FileInfoOnStorageViewHolder.class,
+                mDatabaseReference.child(DATABASE_REFERENCE_FILE_LIST_NAME));
+
+        ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDownloadClickListener(new FileInfoOnStorageViewHolder.DownloadClickListener() {
+            @Override
+            public void onItemClickDownload(int position) {
+                // TODO: download button realization.
+            }
+        });
+        ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDeleteClickListener(new FileInfoOnStorageViewHolder.DeleteClickListener() {
+            @Override
+            public void onItemClickDelete(int position) {
+                // TODO: delete button realization.
+            }
+        });
+
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int fileItemsCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition =
+                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the
+                // user is at the bottom of the list, scroll to the bottom
+                // of the list to show the newly added file items.
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (fileItemsCount - 1) &&
+                                lastVisiblePosition == (positionStart - 1))) {
+                    mRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(mFirebaseAdapter);
+    }
 
     private void performFileUploadingByUri(List<Uri> uris) {
         for (Uri fileUri : uris) {
@@ -223,12 +347,12 @@ public class FileStoreActivity extends AppCompatActivity {
                 mUploadTasks.add(uploadTask);
             }
         }
-        performFileUploadingByUploadTasks(mUploadTasks);
+        performListenersRegistrationForUploadTasks(mUploadTasks);
     }
 
-    private void performFileUploadingByUploadTasks(List<UploadTask> uploadTasks) {
+    private void performListenersRegistrationForUploadTasks(List<UploadTask> uploadTasks) {
         for (UploadTask uploadTask : uploadTasks) {
-            // TODO: UI for loading init here
+            // TODO: init UI for uploading progress
             registerListenersForUploadTask(uploadTask);
         }
     }

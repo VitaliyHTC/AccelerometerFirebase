@@ -36,4 +36,15 @@ public abstract class Utils {
     public static String getCurrentUserUid() {
         return FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
+
+    // http://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+    // https://en.wikipedia.org/wiki/Kilobyte
+    // modified.
+    public static String humanReadableByteCount(long bytes) {
+        int unit = 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = "KMGTPE".charAt(exp-1)+"";
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
 }
