@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -45,6 +46,7 @@ import com.vitaliyhtc.accelerometerfirebase.adapters.FileInfoOnStorageAdapter;
 import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnDevice;
 import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnStorage;
 import com.vitaliyhtc.accelerometerfirebase.model.FileStoreUploadedFiles;
+import com.vitaliyhtc.accelerometerfirebase.model.ProgressItem;
 import com.vitaliyhtc.accelerometerfirebase.model.UploadTaskListeners;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 import com.vitaliyhtc.accelerometerfirebase.viewholder.FileInfoOnStorageViewHolder;
@@ -66,10 +68,10 @@ import butterknife.OnClick;
  * TODO: 2017.04.12
  * +++ при кліку на другу кнопку відкривається новий скрін
  * +++ де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
- * під час завантаження показується прогрес,
- * +++ завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
+ * +++ під час завантаження показується прогрес,
+ *     завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
  * +++ завантажені файли користувача записуються в окрему вітку бази
- * і є можливість їх переглянути і скачати
+ * +++ і є можливість їх переглянути і скачати
  */
 public class FileStoreActivity extends AppCompatActivity {
 
@@ -84,6 +86,8 @@ public class FileStoreActivity extends AppCompatActivity {
     RecyclerView mRecyclerView;
     @BindView(R.id.tools_ib_upload_file)
     ImageView mUploadImageView;
+    @BindView(R.id.progressBar)
+    ProgressBar mProgressBar;
     private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
     private FileStoreUploadedFiles mUploadedFilesInfo;
@@ -91,6 +95,7 @@ public class FileStoreActivity extends AppCompatActivity {
     private Map<UploadTask, UploadTaskListeners> mUploadTaskListeners;
     private FirebaseRecyclerAdapter<FileInfoOnStorage, FileInfoOnStorageViewHolder> mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
+    private Map<String, ProgressItem> mProgressMap;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -99,6 +104,9 @@ public class FileStoreActivity extends AppCompatActivity {
         this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ButterKnife.bind(this);
+
+        initVariables();
+        restoreState(savedInstanceState);
 
         requestWriteExternalStoragePermission();
     }
@@ -115,34 +123,23 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-
-        // If there was an upload in progress, get its reference and create a new StorageReference
-        final String stringRef = savedInstanceState.getString("reference");
-        if (stringRef == null) {
-            return;
-        }
-        mStorageReference = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
-        // Find all UploadTasks under this StorageReference
-        mUploadTasks.addAll(mStorageReference.getActiveUploadTasks());
-        performListenersRegistrationForUploadTasks(mUploadTasks);
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
+        /*
         for (UploadTask uploadTask : mUploadTasks) {
             uploadTask.pause();
         }
+        */
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        /*
         for (UploadTask uploadTask : mUploadTasks) {
             uploadTask.resume();
         }
+        */
     }
 
     @Override
@@ -259,7 +256,7 @@ public class FileStoreActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void init() {
+    private void initVariables() {
         mStorageReference = FirebaseStorage.getInstance().getReference()
                 .child(STORAGE_REFERENCE_FILES)
                 .child(Utils.getCurrentUserUid());
@@ -270,6 +267,24 @@ public class FileStoreActivity extends AppCompatActivity {
         mUploadTasks = new ArrayList<>();
         mUploadTaskListeners = new HashMap<>();
 
+        mProgressMap = new HashMap<>();
+    }
+
+    private void restoreState(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            // If there was an upload in progress, get its reference and create a new StorageReference
+            String stringRef = savedInstanceState.getString("reference");
+            if (stringRef == null) {
+                return;
+            }
+            mStorageReference = FirebaseStorage.getInstance().getReferenceFromUrl(stringRef);
+            // Find all UploadTasks under this StorageReference
+            mUploadTasks.addAll(mStorageReference.getActiveUploadTasks());
+            performListenersRegistrationForUploadTasks(mUploadTasks);
+        }
+    }
+
+    private void init() {
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -419,7 +434,6 @@ public class FileStoreActivity extends AppCompatActivity {
             @SuppressWarnings("VisibleForTests")
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                 mUploadedFilesInfo.getUploadedFilesInfo().add(new FileInfoOnStorage(
                         taskSnapshot.getMetadata().getName(),
                         taskSnapshot.getMetadata().getPath(),
@@ -443,8 +457,12 @@ public class FileStoreActivity extends AppCompatActivity {
             @SuppressWarnings("VisibleForTests")
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                System.out.println("Upload is " + progress + "% done");
+                // TODO: 19.04.17 bad code with hashcode. Try to find better solution.
+                updateProgressBar(
+                        uploadTask.hashCode() + "",
+                        taskSnapshot.getBytesTransferred(),
+                        taskSnapshot.getTotalByteCount()
+                );
             }
         };
 
@@ -460,4 +478,31 @@ public class FileStoreActivity extends AppCompatActivity {
         uploadTask.addOnProgressListener(onProgressListener);
     }
 
+
+    private void updateProgressBar(String name, long bytesTransfered, long totalByteCount) {
+        if (!mProgressMap.containsKey(name)) {
+            mProgressMap.put(name, new ProgressItem(name, bytesTransfered, totalByteCount));
+        } else {
+            mProgressMap.get(name).setBytesTransfered(bytesTransfered);
+            mProgressMap.get(name).setTotalByteCount(totalByteCount);
+        }
+        updateProgressBarUi();
+    }
+
+    private void updateProgressBarUi() {
+        mProgressBar.setVisibility(View.VISIBLE);
+        long bytesTransfered = 0;
+        long totalByteCount = 0;
+        for (ProgressItem progressItem : mProgressMap.values()) {
+            bytesTransfered += progressItem.getBytesTransfered();
+            totalByteCount += progressItem.getTotalByteCount();
+        }
+        int progress = (int) ((100 * bytesTransfered) / totalByteCount);
+        mProgressBar.setProgress(progress);
+        if (progress == 100) {
+            mProgressBar.setVisibility(View.GONE);
+            mProgressBar.setProgress(0);
+            mProgressMap.clear();
+        }
+    }
 }
