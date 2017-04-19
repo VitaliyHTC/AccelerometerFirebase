@@ -48,7 +48,7 @@ import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnDevice;
 import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnStorage;
 import com.vitaliyhtc.accelerometerfirebase.model.FileStoreUploadedFiles;
 import com.vitaliyhtc.accelerometerfirebase.model.ProgressItem;
-import com.vitaliyhtc.accelerometerfirebase.model.UploadTaskListeners;
+import com.vitaliyhtc.accelerometerfirebase.model.TaskListeners;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 import com.vitaliyhtc.accelerometerfirebase.viewholder.FileInfoOnStorageViewHolder;
 
@@ -98,7 +98,9 @@ public class FileStoreActivity extends AppCompatActivity {
     private DatabaseReference mDatabaseReference;
     private FileStoreUploadedFiles mUploadedFilesInfo;
     private List<UploadTask> mUploadTasks;
-    private Map<UploadTask, UploadTaskListeners> mUploadTaskListeners;
+    private Map<UploadTask, TaskListeners<UploadTask.TaskSnapshot>> mUploadTaskListeners;
+    private List<FileDownloadTask> mFileDownloadTasks;
+    private Map<FileDownloadTask, TaskListeners<FileDownloadTask.TaskSnapshot>> mFileDownloadTaskListeners;
     private FirebaseRecyclerAdapter<FileInfoOnStorage, FileInfoOnStorageViewHolder> mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
     private Map<String, ProgressItem> mProgressMap;
@@ -156,13 +158,7 @@ public class FileStoreActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        for (UploadTask uploadTask : mUploadTasks) {
-            UploadTaskListeners uploadTaskListeners = mUploadTaskListeners.get(uploadTask);
-            uploadTask.removeOnFailureListener(uploadTaskListeners.getOnFailureListener());
-            uploadTask.removeOnSuccessListener(uploadTaskListeners.getOnSuccessListener());
-            uploadTask.removeOnPausedListener(uploadTaskListeners.getOnPausedListener());
-            uploadTask.removeOnProgressListener(uploadTaskListeners.getOnProgressListener());
-        }
+        unregisterListeners();
     }
 
     @Override
@@ -279,6 +275,9 @@ public class FileStoreActivity extends AppCompatActivity {
         mUploadTasks = new ArrayList<>();
         mUploadTaskListeners = new HashMap<>();
 
+        mFileDownloadTasks = new ArrayList<>();
+        mFileDownloadTaskListeners = new HashMap<>();
+
         mProgressMap = new HashMap<>();
     }
 
@@ -293,6 +292,9 @@ public class FileStoreActivity extends AppCompatActivity {
             // Find all UploadTasks under this StorageReference
             mUploadTasks.addAll(mStorageReference.getActiveUploadTasks());
             performListenersRegistrationForUploadTasks(mUploadTasks);
+            // Find all FileDownloadTasks under this StorageReference
+            mFileDownloadTasks.addAll(mStorageReference.getActiveDownloadTasks());
+            performListenersRegistrationForFileDownloadTasks(mFileDownloadTasks);
         }
     }
 
@@ -384,6 +386,12 @@ public class FileStoreActivity extends AppCompatActivity {
         }
     }
 
+    private void performListenersRegistrationForFileDownloadTasks(List<FileDownloadTask> fileDownloadTasks) {
+        for (FileDownloadTask fileDownloadTask : fileDownloadTasks) {
+            registerListenersForFileDownloadTask(fileDownloadTask);
+        }
+    }
+
     private void actionDownloadFile(final FileInfoOnStorage fileInfo) {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             StorageReference fileRef = mStorageReference.child(fileInfo.getFilename());
@@ -391,22 +399,8 @@ public class FileStoreActivity extends AppCompatActivity {
             File file = new File(baseDir + File.separator + Environment.DIRECTORY_DOWNLOADS
                     + File.separator + fileInfo.getFilename());
 
-            fileRef.getFile(file).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(
-                            FileStoreActivity.this,
-                            fileInfo.getFilename() + getString(R.string.filestore_toast_file_downloaded_to_your_download_directory),
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Log.e(TAG, "actionDownloadFile.onFailure: ", exception);
-                    Toast.makeText(FileStoreActivity.this, R.string.filestore_toast_file_downloading_failed, Toast.LENGTH_LONG).show();
-                }
-            });
+            FileDownloadTask fileDownloadTask = fileRef.getFile(file);
+            registerListenersForFileDownloadTask(fileDownloadTask);
         } else {
             Toast.makeText(FileStoreActivity.this,
                     R.string.filestore_toast_no_external_storage_found, Toast.LENGTH_LONG).show();
@@ -419,7 +413,7 @@ public class FileStoreActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Void aVoid) {
                 Toast.makeText(FileStoreActivity.this,
-                        fileInfo.getFilename() + getString(R.string.filestore_toast_file_has_been_deleted), Toast.LENGTH_LONG).show();
+                        fileInfo.getFilename() + " " + getString(R.string.filestore_toast_file_has_been_deleted), Toast.LENGTH_LONG).show();
                 mUploadedFilesInfo.getUploadedFilesInfo().remove(fileInfo);
                 mDatabaseReference.setValue(mUploadedFilesInfo);
             }
@@ -433,14 +427,12 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void registerListenersForUploadTask(final UploadTask uploadTask) {
-
         OnFailureListener onFailureListener = new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 Log.e(TAG, "onFailure: ", exception);
             }
         };
-
         OnSuccessListener<UploadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @SuppressWarnings("VisibleForTests")
             @Override
@@ -452,7 +444,7 @@ public class FileStoreActivity extends AppCompatActivity {
                         taskSnapshot.getTotalByteCount(),
                         taskSnapshot.getMetadata().getContentType()
                 );
-                if(mUploadedFilesInfo.getUploadedFilesInfo().contains(fileInfoOnStorage)){
+                if (mUploadedFilesInfo.getUploadedFilesInfo().contains(fileInfoOnStorage)) {
                     mUploadedFilesInfo.getUploadedFilesInfo().remove(fileInfoOnStorage);
                 }
                 mUploadedFilesInfo.getUploadedFilesInfo().add(fileInfoOnStorage);
@@ -460,14 +452,12 @@ public class FileStoreActivity extends AppCompatActivity {
                 mUploadTasks.remove(uploadTask);
             }
         };
-
         OnPausedListener<UploadTask.TaskSnapshot> onPausedListener = new OnPausedListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
                 Log.i(TAG, "onPaused: Upload is paused");
             }
         };
-
         OnProgressListener<UploadTask.TaskSnapshot> onProgressListener = new OnProgressListener<UploadTask.TaskSnapshot>() {
             @SuppressWarnings("VisibleForTests")
             @Override
@@ -483,14 +473,84 @@ public class FileStoreActivity extends AppCompatActivity {
 
         mUploadTaskListeners.put(
                 uploadTask,
-                new UploadTaskListeners(
-                        onFailureListener, onSuccessListener, onPausedListener, onProgressListener)
+                new TaskListeners<>(onFailureListener, onSuccessListener, onPausedListener, onProgressListener)
         );
 
         uploadTask.addOnFailureListener(onFailureListener);
         uploadTask.addOnSuccessListener(onSuccessListener);
         uploadTask.addOnPausedListener(onPausedListener);
         uploadTask.addOnProgressListener(onProgressListener);
+    }
+
+    private void registerListenersForFileDownloadTask(final FileDownloadTask fileDownloadTask) {
+        OnFailureListener onFailureListener = new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e(TAG, "actionDownloadFile.onFailure: ", exception);
+                Toast.makeText(FileStoreActivity.this, R.string.filestore_toast_file_downloading_failed, Toast.LENGTH_LONG).show();
+            }
+        };
+        OnSuccessListener<FileDownloadTask.TaskSnapshot> onSuccessListener = new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(
+                        FileStoreActivity.this,
+                        getString(R.string.filestore_toast_file_downloaded_to_your_download_directory),
+                        Toast.LENGTH_LONG
+                ).show();
+                mFileDownloadTasks.remove(fileDownloadTask);
+            }
+        };
+        OnProgressListener<FileDownloadTask.TaskSnapshot> onProgressListener = new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+            @SuppressWarnings("VisibleForTests")
+            @Override
+            public void onProgress(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                // TODO: 19.04.17 bad code with hashcode. Try to find better solution.
+                updateProgressBar(
+                        fileDownloadTask.hashCode() + "",
+                        taskSnapshot.getBytesTransferred(),
+                        taskSnapshot.getTotalByteCount()
+                );
+            }
+        };
+
+        mFileDownloadTaskListeners.put(
+                fileDownloadTask,
+                new TaskListeners<>(onFailureListener, onSuccessListener, null, onProgressListener)
+        );
+
+        fileDownloadTask.addOnFailureListener(onFailureListener);
+        fileDownloadTask.addOnSuccessListener(onSuccessListener);
+        fileDownloadTask.addOnProgressListener(onProgressListener);
+    }
+
+    private void unregisterListeners() {
+        for (UploadTask uploadTask : mUploadTasks) {
+            TaskListeners<UploadTask.TaskSnapshot> uploadTaskListeners = mUploadTaskListeners.get(uploadTask);
+            uploadTask.removeOnFailureListener(uploadTaskListeners.getOnFailureListener());
+            uploadTask.removeOnSuccessListener(uploadTaskListeners.getOnSuccessListener());
+            uploadTask.removeOnPausedListener(uploadTaskListeners.getOnPausedListener());
+            uploadTask.removeOnProgressListener(uploadTaskListeners.getOnProgressListener());
+        }
+        for (FileDownloadTask fileDownloadTask : mFileDownloadTasks) {
+            TaskListeners<FileDownloadTask.TaskSnapshot> fileDownloadTaskListeners = mFileDownloadTaskListeners.get(fileDownloadTask);
+            OnFailureListener onFailureListener = fileDownloadTaskListeners.getOnFailureListener();
+            if (onFailureListener != null) {
+                fileDownloadTask.removeOnFailureListener(onFailureListener);
+            }
+            OnSuccessListener<FileDownloadTask.TaskSnapshot> onSuccessListener = fileDownloadTaskListeners.getOnSuccessListener();
+            if (onSuccessListener != null) {
+                fileDownloadTask.removeOnSuccessListener(onSuccessListener);
+            }
+            OnPausedListener<FileDownloadTask.TaskSnapshot> onPausedListener = fileDownloadTaskListeners.getOnPausedListener();
+            if (onPausedListener != null) {
+                fileDownloadTask.removeOnPausedListener(onPausedListener);
+            }
+            OnProgressListener<FileDownloadTask.TaskSnapshot> onProgressListener = fileDownloadTaskListeners.getOnProgressListener();
+            if (onProgressListener != null) {
+                fileDownloadTask.removeOnProgressListener(onProgressListener);
+            }
+        }
     }
 
 
