@@ -445,13 +445,17 @@ public class FileStoreActivity extends AppCompatActivity {
             @SuppressWarnings("VisibleForTests")
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                mUploadedFilesInfo.getUploadedFilesInfo().add(new FileInfoOnStorage(
+                FileInfoOnStorage fileInfoOnStorage = new FileInfoOnStorage(
                         taskSnapshot.getMetadata().getName(),
                         taskSnapshot.getMetadata().getPath(),
                         taskSnapshot.getDownloadUrl().toString(),
                         taskSnapshot.getTotalByteCount(),
                         taskSnapshot.getMetadata().getContentType()
-                ));
+                );
+                if(mUploadedFilesInfo.getUploadedFilesInfo().contains(fileInfoOnStorage)){
+                    mUploadedFilesInfo.getUploadedFilesInfo().remove(fileInfoOnStorage);
+                }
+                mUploadedFilesInfo.getUploadedFilesInfo().add(fileInfoOnStorage);
                 mDatabaseReference.setValue(mUploadedFilesInfo);
                 mUploadTasks.remove(uploadTask);
             }

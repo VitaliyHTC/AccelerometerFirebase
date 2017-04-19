@@ -42,10 +42,10 @@
     <string name="filestore_tools_delete_button">Delete file</string>
     <string name="permission_rationale_title">Write external storage</string>
     <string name="permission_rationale_message">You need to grant this permission for application access to files on storage and ability to upload and download files from and to it.</string>
-    <string name="filestore_toast_file_downloaded_to_your_download_directory">downloaded to your ExternalStorage Download directory.</string>
+    <string name="filestore_toast_file_downloaded_to_your_download_directory"> downloaded to your ExternalStorage Download directory.</string>
     <string name="filestore_toast_file_downloading_failed">File downloading failed!</string>
     <string name="filestore_toast_no_external_storage_found">No ExternalStorage found. Unable to download file.</string>
-    <string name="filestore_toast_file_has_been_deleted">has been deleted</string>
+    <string name="filestore_toast_file_has_been_deleted"> has been deleted</string>
     <string name="filestore_toast_file_deleting_failed">File deleting failed!</string>
     <string name="filestore_permissions_error_title">Permissions Error!</string>
     <string name="filestore_permissions_error_description">FileStore need Write external storage permission for correct work. Application need to read file for uploading and write file when downloading it. If you like to use this functionality, please grant permissions for this app.</string>
