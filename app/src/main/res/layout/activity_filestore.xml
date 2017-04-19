@@ -63,4 +63,32 @@
         style="?android:attr/progressBarStyleHorizontal"
         />
 
+    <RelativeLayout
+        android:id="@+id/permissions_error"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/white"
+        >
+        <TextView
+            android:id="@+id/permissions_error_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:padding="16dp"
+            android:textSize="24sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/filestore_permissions_error_title"
+            />
+        <TextView
+            android:id="@+id/permissions_error_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/permissions_error_title"
+            android:padding="8dp"
+            android:textSize="16sp"
+            android:text="@string/filestore_permissions_error_description"
+            />
+    </RelativeLayout>
+
 </RelativeLayout>

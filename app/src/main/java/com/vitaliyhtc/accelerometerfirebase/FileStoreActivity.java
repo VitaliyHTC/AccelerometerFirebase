@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -63,15 +64,16 @@ import butterknife.OnClick;
 
 /**
  * окей, тоді firebase, треба трохи переробити.
- * +++ Після логінізації екран з двома кнопками "Accelerometer" i "FileStore",
- * +++ При кліку на першу кнопку переход на твоє завдання фактично,
- * TODO: 2017.04.12
- * +++ при кліку на другу кнопку відкривається новий скрін
- * +++ де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
- * +++ під час завантаження показується прогрес,
- *     завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
- * +++ завантажені файли користувача записуються в окрему вітку бази
- * +++ і є можливість їх переглянути і скачати
+ * + Після логінізації екран з двома кнопками "Accelerometer" i "FileStore",
+ * + При кліку на першу кнопку переход на твоє завдання фактично,
+ * + при кліку на другу кнопку відкривається новий скрін
+ * + де вибираєш файл(один або декілька) і завантажуєш їх на GoogleCloudStore
+ * + під час завантаження показується прогрес,
+ * ! завантаження автоматично на паузу і продовжується в залежності від onPause, onResume
+ * ! not possible to implement with firebase 10.2.1 version due to bug in client library.
+ * ! see: http://stackoverflow.com/questions/43355928/resuming-uploadtask-results-in-e-storageexception-bufferedinputstream-is-closed
+ * + завантажені файли користувача записуються в окрему вітку бази
+ * + і є можливість їх переглянути і скачати
  */
 public class FileStoreActivity extends AppCompatActivity {
 
@@ -82,12 +84,16 @@ public class FileStoreActivity extends AppCompatActivity {
 
     // same as name of list in FileStoreUploadedFiles
     private static final String DATABASE_REFERENCE_FILE_LIST_NAME = "uploadedFilesInfo";
+
     @BindView(R.id.recycler_view)
     RecyclerView mRecyclerView;
     @BindView(R.id.tools_ib_upload_file)
     ImageView mUploadImageView;
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
+    @BindView(R.id.permissions_error)
+    RelativeLayout mPermissionsError;
+
     private StorageReference mStorageReference;
     private DatabaseReference mDatabaseReference;
     private FileStoreUploadedFiles mUploadedFilesInfo;
@@ -126,6 +132,8 @@ public class FileStoreActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         /*
+ * not possible to implement with firebase 10.2.1 version due to bug in client library.
+ * see: http://stackoverflow.com/questions/43355928/resuming-uploadtask-results-in-e-storageexception-bufferedinputstream-is-closed
         for (UploadTask uploadTask : mUploadTasks) {
             uploadTask.pause();
         }
@@ -136,6 +144,8 @@ public class FileStoreActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         /*
+ * not possible to implement with firebase 10.2.1 version due to bug in client library.
+ * see: http://stackoverflow.com/questions/43355928/resuming-uploadtask-results-in-e-storageexception-bufferedinputstream-is-closed
         for (UploadTask uploadTask : mUploadTasks) {
             uploadTask.resume();
         }
@@ -204,6 +214,7 @@ public class FileStoreActivity extends AppCompatActivity {
     private void requestWriteExternalStoragePermission() {
         if (ActivityCompat.checkSelfPermission(FileStoreActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             init();
+            mPermissionsError.setVisibility(View.GONE);
         } else {
             Dexter.withActivity(FileStoreActivity.this)
                     .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -211,6 +222,7 @@ public class FileStoreActivity extends AppCompatActivity {
                         @Override
                         public void onPermissionGranted(PermissionGrantedResponse response) {
                             init();
+                            mPermissionsError.setVisibility(View.GONE);
                         }
 
                         @Override
@@ -227,7 +239,7 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void onPermissionDeniedResume(PermissionDeniedResponse response) {
-        // TODO: show error. Unable to perform any operations with files. Permission denied. etc...
+        mPermissionsError.setVisibility(View.VISIBLE);
     }
 
     private void onPermissionRationaleShouldBeShownResume(PermissionRequest permission, final PermissionToken token) {
@@ -368,7 +380,6 @@ public class FileStoreActivity extends AppCompatActivity {
 
     private void performListenersRegistrationForUploadTasks(List<UploadTask> uploadTasks) {
         for (UploadTask uploadTask : uploadTasks) {
-            // TODO: init UI for uploading progress
             registerListenersForUploadTask(uploadTask);
         }
     }
@@ -385,7 +396,7 @@ public class FileStoreActivity extends AppCompatActivity {
                 public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                     Toast.makeText(
                             FileStoreActivity.this,
-                            fileInfo.getFilename() + " downloaded to your ExternalStorage Download directory.",
+                            fileInfo.getFilename() + getString(R.string.filestore_toast_file_downloaded_to_your_download_directory),
                             Toast.LENGTH_LONG
                     ).show();
                 }
@@ -393,12 +404,12 @@ public class FileStoreActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception exception) {
                     Log.e(TAG, "actionDownloadFile.onFailure: ", exception);
-                    Toast.makeText(FileStoreActivity.this, "File downloading failed!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(FileStoreActivity.this, R.string.filestore_toast_file_downloading_failed, Toast.LENGTH_LONG).show();
                 }
             });
         } else {
             Toast.makeText(FileStoreActivity.this,
-                    "No ExternalStorage found. Unable to download file.", Toast.LENGTH_LONG).show();
+                    R.string.filestore_toast_no_external_storage_found, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -408,7 +419,7 @@ public class FileStoreActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Void aVoid) {
                 Toast.makeText(FileStoreActivity.this,
-                        fileInfo.getFilename() + " deleting successful!", Toast.LENGTH_LONG).show();
+                        fileInfo.getFilename() + getString(R.string.filestore_toast_file_has_been_deleted), Toast.LENGTH_LONG).show();
                 mUploadedFilesInfo.getUploadedFilesInfo().remove(fileInfo);
                 mDatabaseReference.setValue(mUploadedFilesInfo);
             }
@@ -416,7 +427,7 @@ public class FileStoreActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 Log.e(TAG, "actionDeleteFile.onFailure: ", exception);
-                Toast.makeText(FileStoreActivity.this, "File deleting failed!", Toast.LENGTH_LONG).show();
+                Toast.makeText(FileStoreActivity.this, R.string.filestore_toast_file_deleting_failed, Toast.LENGTH_LONG).show();
             }
         });
     }
