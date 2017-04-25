@@ -208,6 +208,7 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void requestWriteExternalStoragePermission() {
+        // TODO: 25/04/17 no need to check permissions, just call dexter
         if (ActivityCompat.checkSelfPermission(FileStoreActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             init();
             mPermissionsError.setVisibility(View.GONE);
@@ -265,6 +266,8 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void initVariables() {
+        // TODO: 25/04/17 create firebase endpoint abstraction get work with firebase storage and firebase database in terms of this application
+//        for example FirebaseHelper.getCurrentUserStoreRef(), etc, ...
         mStorageReference = FirebaseStorage.getInstance().getReference()
                 .child(STORAGE_REFERENCE_FILES)
                 .child(Utils.getCurrentUserUid());
@@ -330,6 +333,7 @@ public class FileStoreActivity extends AppCompatActivity {
                 FileInfoOnStorageViewHolder.class,
                 mDatabaseReference.child(DATABASE_REFERENCE_FILE_LIST_NAME));
 
+        // TODO: 25/04/17 why not private FileInfoOnStorageAdapter mFirebaseAdapter?????
         ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDownloadClickListener(new FileInfoOnStorageViewHolder.DownloadClickListener() {
             @Override
             public void onItemClickDownload(int position) {
