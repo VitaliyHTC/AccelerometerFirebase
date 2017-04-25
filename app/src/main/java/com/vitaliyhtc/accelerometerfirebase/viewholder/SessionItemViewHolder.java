@@ -31,7 +31,7 @@ public class SessionItemViewHolder extends RecyclerView.ViewHolder {
     public SessionItemViewHolder(View v) {
         super(v);
         ButterKnife.bind(this, v);
-
+        // TODO: 25/04/17 ButterKnife? check video https://www.youtube.com/watch?v=imsr8NrIAMs&t=2062
         v.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

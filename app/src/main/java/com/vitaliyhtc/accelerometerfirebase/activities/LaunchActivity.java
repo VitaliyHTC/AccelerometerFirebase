@@ -33,10 +33,27 @@ public class LaunchActivity extends AppCompatActivity
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
+        ButterKnife.bind(this);
 
+        /*
+        // TODO: 25/04/17 this is the right way of launch activity chooser for
+        accelerometer & file store must be after user login
+        reorganize app logic:
+         - LaunchActivity(SplashActivity) to check if user logged in and perform some animation/data loading if needed LAUNCHER
+         - TaskChooserActivity simple activity to pick Accelerometer or FileStore part should be launched if user already logged in
+         - LoginActivity(AuthActivity) to create user/ log in user, should be launched if user not logged in
+         - AccelerometerActivity - main activity for Accelerometer part
+         - FileStoreActivity - main activity for FileStore part
+
+        if (userLoggedIn()) {
+            startMainActivity();
+        } else {
+            startLoginActivity();
+        }
+        clean up all unused stuff
+        */
         doAuth();
 
-        ButterKnife.bind(this);
     }
 
 

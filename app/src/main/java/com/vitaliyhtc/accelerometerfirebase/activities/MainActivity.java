@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity
 
         restoreFromSavedInstanceState(savedInstanceState);
 
+        // initBroadcastReceiver() much easier
         performBroadcastReceiverRegistration();
 
         mFragmentManager = getSupportFragmentManager();

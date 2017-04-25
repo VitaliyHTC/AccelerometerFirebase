@@ -38,6 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+// TODO: 25/04/17  be more specific, what MainService?
 public class MainService extends Service {
 
     private static final int ONGOING_NOTIFICATION_ID = 0xff;
