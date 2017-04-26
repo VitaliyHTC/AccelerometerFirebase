@@ -53,10 +53,8 @@ public class TaskChooserActivity extends AppCompatActivity {
 
     @OnClick(R.id.btn_launch_filestore)
     void startFileStore() {
-        /*
         Intent intent = new Intent(this, FileStoreActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(intent);
-        */
     }
 }

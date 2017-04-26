@@ -17,18 +17,15 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.vitaliyhtc.accelerometerfirebase.R;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.SessionItemFragment;
 import com.vitaliyhtc.accelerometerfirebase.models.AccelerometerData;
 import com.vitaliyhtc.accelerometerfirebase.models.SessionItem;
-import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
+import com.vitaliyhtc.accelerometerfirebase.utils.FirebaseUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.vitaliyhtc.accelerometerfirebase.Config.FIREBASE_DB_PATH_SESSIONS_ITEM;
 
 public class DataGraphFragment extends Fragment implements SessionItemFragment {
 
@@ -59,11 +56,7 @@ public class DataGraphFragment extends Fragment implements SessionItemFragment {
     }
 
     private void init() {
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-
-        DatabaseReference databaseReference = database
-                .child(FIREBASE_DB_PATH_SESSIONS_ITEM)
-                .child(Utils.getCurrentUserUid())
+        DatabaseReference databaseReference = FirebaseUtils.getCurrentUserDatabaseRefSessionItems()
                 .child(mSessionItemKey);
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {

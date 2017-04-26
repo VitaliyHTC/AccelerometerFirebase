@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <RelativeLayout
+        android:id="@+id/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+        <ImageView
+            android:id="@+id/tools_ib_navigate_to_root_directory"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_storage_black_32dp"
+            android:contentDescription="@string/filestore_tools_navigate_to_root_directory"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_create_new_directory"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_create_new_folder_black_32dp"
+            android:contentDescription="@string/filestore_tools_create_new_directory"
+            />
+        <ImageView
+            android:id="@+id/tools_ib_upload_file"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="4dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:visibility="gone"
+            android:src="@drawable/ic_file_upload_grey_32dp"
+            android:contentDescription="@string/filestore_tools_upload_button"
+            />
+    </RelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tools"
+        android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"
+        android:progress="0"
+        android:indeterminate="false"
+        style="?android:attr/progressBarStyleHorizontal"
+        />
+
+    <RelativeLayout
+        android:id="@+id/permissions_error"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/white"
+        >
+        <TextView
+            android:id="@+id/permissions_error_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:padding="16dp"
+            android:textSize="24sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/filestore_permissions_error_title"
+            />
+        <TextView
+            android:id="@+id/permissions_error_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/permissions_error_title"
+            android:padding="8dp"
+            android:textSize="16sp"
+            android:text="@string/filestore_permissions_error_description"
+            />
+    </RelativeLayout>
+
+</RelativeLayout>

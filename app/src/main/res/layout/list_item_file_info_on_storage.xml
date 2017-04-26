@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    >
+
+    <TextView
+        android:id="@+id/tv_filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/tools_ib_download_file"
+        android:layout_toLeftOf="@+id/tools_ib_download_file"
+        android:textSize="20sp"
+        tools:text="mega_milk_by_mariedoll.jpg"
+        />
+
+    <TextView
+        android:id="@+id/tv_mimetype"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_filename"
+        android:layout_toStartOf="@+id/tv_filesize"
+        android:layout_toLeftOf="@+id/tv_filesize"
+        tools:text="image/jpeg"
+        />
+    <TextView
+        android:id="@+id/tv_filesize"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_filename"
+        android:layout_toStartOf="@+id/tools_ib_download_file"
+        android:layout_toLeftOf="@+id/tools_ib_download_file"
+        tools:text="679.45 kb"
+        />
+
+    <ImageView
+        android:id="@+id/tools_ib_download_file"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_toStartOf="@+id/tools_ib_delete_file"
+        android:layout_toLeftOf="@+id/tools_ib_delete_file"
+        android:src="@drawable/ic_file_download_grey_32dp"
+        android:contentDescription="@string/filestore_tools_download_button"
+        />
+    <ImageView
+        android:id="@+id/tools_ib_delete_file"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="4dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/ic_delete_grey_32dp"
+        android:contentDescription="@string/filestore_tools_delete_button"
+        />
+
+</RelativeLayout>

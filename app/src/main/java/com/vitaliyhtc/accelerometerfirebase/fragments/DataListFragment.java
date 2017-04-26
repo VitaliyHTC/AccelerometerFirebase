@@ -12,19 +12,17 @@ import android.widget.ProgressBar;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.vitaliyhtc.accelerometerfirebase.R;
 import com.vitaliyhtc.accelerometerfirebase.activities.AccelerometerActivity;
 import com.vitaliyhtc.accelerometerfirebase.adapters.AccelerometerDataListAdapter;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.SessionItemFragment;
 import com.vitaliyhtc.accelerometerfirebase.models.AccelerometerData;
-import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
+import com.vitaliyhtc.accelerometerfirebase.utils.FirebaseUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import static com.vitaliyhtc.accelerometerfirebase.Config.FIREBASE_DB_PATH_COORDINATES;
-import static com.vitaliyhtc.accelerometerfirebase.Config.FIREBASE_DB_PATH_SESSIONS_ITEM;
 
 public class DataListFragment extends Fragment implements SessionItemFragment {
 
@@ -66,15 +64,11 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
     }
 
     private void init() {
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         linearLayoutManager.setStackFromEnd(true);
         mRecyclerView.setLayoutManager(linearLayoutManager);
 
-        DatabaseReference databaseReference = database
-                .child(FIREBASE_DB_PATH_SESSIONS_ITEM)
-                .child(Utils.getCurrentUserUid())
+        DatabaseReference databaseReference = FirebaseUtils.getCurrentUserDatabaseRefSessionItems()
                 .child(mSessionItemKey)
                 .child(FIREBASE_DB_PATH_COORDINATES);
 
