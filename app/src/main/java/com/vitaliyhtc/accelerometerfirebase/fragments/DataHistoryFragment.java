@@ -18,7 +18,6 @@ import com.vitaliyhtc.accelerometerfirebase.adapters.SessionItemsDataAdapter;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.HistoryItemSelectionCallback;
 import com.vitaliyhtc.accelerometerfirebase.models.SessionItem;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
-import com.vitaliyhtc.accelerometerfirebase.viewholder.SessionItemViewHolder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,7 +26,7 @@ import static com.vitaliyhtc.accelerometerfirebase.Config.FIREBASE_DB_PATH_SESSI
 
 public class DataHistoryFragment extends Fragment {
 
-    private FirebaseRecyclerAdapter<SessionItem, SessionItemViewHolder> mFirebaseAdapter;
+    private FirebaseRecyclerAdapter<SessionItem, SessionItemsDataAdapter.SessionItemViewHolder> mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
 
     @BindView(R.id.progressBar)
@@ -68,9 +67,9 @@ public class DataHistoryFragment extends Fragment {
         mFirebaseAdapter = new SessionItemsDataAdapter(
                 SessionItem.class,
                 R.layout.list_item_history,
-                SessionItemViewHolder.class,
+                SessionItemsDataAdapter.SessionItemViewHolder.class,
                 databaseReference);
-        ((SessionItemsDataAdapter) mFirebaseAdapter).setOnClickListener(new SessionItemViewHolder.ClickListener() {
+        ((SessionItemsDataAdapter) mFirebaseAdapter).setOnClickListener(new SessionItemsDataAdapter.ClickListener() {
             @Override
             public void onItemClick(int position) {
                 ((HistoryItemSelectionCallback) getActivity()).displayHistoryItemByKey(mFirebaseAdapter.getRef(position).getKey());

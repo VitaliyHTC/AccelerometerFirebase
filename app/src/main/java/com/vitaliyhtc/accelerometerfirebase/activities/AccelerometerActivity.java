@@ -28,7 +28,7 @@ import com.vitaliyhtc.accelerometerfirebase.Config;
 import com.vitaliyhtc.accelerometerfirebase.fragments.DataGraphFragment;
 import com.vitaliyhtc.accelerometerfirebase.fragments.DataHistoryFragment;
 import com.vitaliyhtc.accelerometerfirebase.fragments.DataListFragment;
-import com.vitaliyhtc.accelerometerfirebase.services.MainService;
+import com.vitaliyhtc.accelerometerfirebase.services.AccelerometerDataLoggerService;
 import com.vitaliyhtc.accelerometerfirebase.R;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.HistoryItemSelectionCallback;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.SessionItemFragment;
@@ -39,11 +39,11 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MainActivity extends AppCompatActivity
+public class AccelerometerActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener,
         HistoryItemSelectionCallback {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "AccelerometerActivity";
 
     private static final String KEY_IS_MAIN_SERVICE_RUNNING = "isMainServiceRunning";
 
@@ -83,15 +83,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_accelerometer);
         this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ButterKnife.bind(this);
 
         restoreFromSavedInstanceState(savedInstanceState);
 
-        // initBroadcastReceiver() much easier
-        performBroadcastReceiverRegistration();
+        initBroadcastReceiver();
 
         mFragmentManager = getSupportFragmentManager();
         initFragments();
@@ -125,7 +124,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent;
         switch (item.getItemId()) {
             case android.R.id.home:
-                intent = new Intent(this, LaunchActivity.class);
+                intent = new Intent(this, SplashActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
                 return true;
@@ -139,7 +138,7 @@ public class MainActivity extends AppCompatActivity
                 mFirebaseAuth.signOut();
                 displayAnonymousUser();
                 disableControlButtons();
-                startActivity(new Intent(this, SignInActivity.class));
+                startActivity(new Intent(this, AuthActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -160,7 +159,7 @@ public class MainActivity extends AppCompatActivity
     @OnClick(R.id.btn_start_logging)
     protected void startDataLogging() {
         if (Utils.isNetworkAvailable(getApplicationContext())) {
-            startService(new Intent(this, MainService.class));
+            startService(new Intent(this, AccelerometerDataLoggerService.class));
         } else {
             Toast.makeText(getApplicationContext(), R.string.error_toast_no_internet, Toast.LENGTH_LONG).show();
         }
@@ -217,7 +216,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             mLastDisplayedFragment = VALUE_FRAGMENT_HISTORY;
         }
-        if (isMyServiceRunning(MainService.class)) {
+        if (isMyServiceRunning(AccelerometerDataLoggerService.class)) {
             isMainServiceRunning = true;
         }
         if (isMainServiceRunning) {
@@ -235,7 +234,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void performBroadcastReceiverRegistration() {
+    private void initBroadcastReceiver() {
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {

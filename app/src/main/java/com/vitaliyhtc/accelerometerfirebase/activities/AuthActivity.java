@@ -25,10 +25,10 @@ import com.vitaliyhtc.accelerometerfirebase.R;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class SignInActivity extends AppCompatActivity
+public class AuthActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener {
 
-    private static final String TAG = "SignInActivity";
+    private static final String TAG = "AuthActivity";
     private static final int RC_SIGN_IN = 9001;
 
     private GoogleApiClient mGoogleApiClient;
@@ -41,15 +41,15 @@ public class SignInActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        ButterKnife.bind(SignInActivity.this);
+        ButterKnife.bind(AuthActivity.this);
 
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(SignInActivity.this)
-                .enableAutoManage(SignInActivity.this /* FragmentActivity */, SignInActivity.this /* OnConnectionFailedListener */)
+        mGoogleApiClient = new GoogleApiClient.Builder(AuthActivity.this)
+                .enableAutoManage(AuthActivity.this /* FragmentActivity */, AuthActivity.this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
@@ -89,14 +89,14 @@ public class SignInActivity extends AppCompatActivity
         // An unresolvable error has occurred and Google APIs (including Sign-In) will not
         // be available.
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
-        Toast.makeText(SignInActivity.this, "Google Play Services error.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(AuthActivity.this, "Google Play Services error.", Toast.LENGTH_SHORT).show();
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mFirebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(SignInActivity.this, new OnCompleteListener<AuthResult>() {
+                .addOnCompleteListener(AuthActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
@@ -106,10 +106,10 @@ public class SignInActivity extends AppCompatActivity
                         // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
                             Log.w(TAG, "signInWithCredential", task.getException());
-                            Toast.makeText(SignInActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(AuthActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_LONG).show();
                         } else {
-                            startActivity(new Intent(SignInActivity.this, LaunchActivity.class));
+                            startActivity(new Intent(AuthActivity.this, TaskChooserActivity.class));
                             finish();
                         }
                     }

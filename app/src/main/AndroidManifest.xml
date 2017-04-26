@@ -14,21 +14,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".activities.LaunchActivity">
+        <activity android:name=".activities.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".activities.AuthActivity" />
+        <activity android:name=".activities.TaskChooserActivity" />
 
-        <activity android:name=".activities.MainActivity" />
-
-        <activity android:name=".activities.SignInActivity" />
+        <activity android:name=".activities.AccelerometerActivity" />
 
         <activity android:name=".activities.SettingsActivity" android:label="@string/action_settings" />
 
         <service
-            android:name=".services.MainService"
+            android:name=".services.AccelerometerDataLoggerService"
             android:exported="false" />
 
         <receiver android:enabled="false"

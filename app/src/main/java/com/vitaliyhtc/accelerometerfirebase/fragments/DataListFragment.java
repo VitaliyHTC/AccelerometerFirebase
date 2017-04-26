@@ -14,12 +14,11 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.vitaliyhtc.accelerometerfirebase.R;
-import com.vitaliyhtc.accelerometerfirebase.activities.MainActivity;
+import com.vitaliyhtc.accelerometerfirebase.activities.AccelerometerActivity;
 import com.vitaliyhtc.accelerometerfirebase.adapters.AccelerometerDataListAdapter;
 import com.vitaliyhtc.accelerometerfirebase.interfaces.SessionItemFragment;
 import com.vitaliyhtc.accelerometerfirebase.models.AccelerometerData;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
-import com.vitaliyhtc.accelerometerfirebase.viewholder.AccelerometerDataViewHolder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,7 +37,7 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
 
     @Override
     public void setSessionItemKey(String sessionItemKey) {
-        if (!MainActivity.VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF.equals(sessionItemKey) && sessionItemKey != null) {
+        if (!AccelerometerActivity.VALUE_DISPLAYED_SESSION_ITEM_KEY_OFF.equals(sessionItemKey) && sessionItemKey != null) {
             mSessionItemKey = sessionItemKey;
         }
     }
@@ -79,11 +78,11 @@ public class DataListFragment extends Fragment implements SessionItemFragment {
                 .child(mSessionItemKey)
                 .child(FIREBASE_DB_PATH_COORDINATES);
 
-        FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataViewHolder> firebaseAdapter =
+        FirebaseRecyclerAdapter<AccelerometerData, AccelerometerDataListAdapter.AccelerometerDataViewHolder> firebaseAdapter =
                 new AccelerometerDataListAdapter(
                         AccelerometerData.class,
                         R.layout.list_item_accelerometer_data,
-                        AccelerometerDataViewHolder.class,
+                        AccelerometerDataListAdapter.AccelerometerDataViewHolder.class,
                         databaseReference);
 
         mProgressBar.setVisibility(ProgressBar.GONE);

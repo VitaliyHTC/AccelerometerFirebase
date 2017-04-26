@@ -26,7 +26,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.vitaliyhtc.accelerometerfirebase.Config;
 import com.vitaliyhtc.accelerometerfirebase.R;
-import com.vitaliyhtc.accelerometerfirebase.activities.MainActivity;
+import com.vitaliyhtc.accelerometerfirebase.activities.AccelerometerActivity;
 import com.vitaliyhtc.accelerometerfirebase.utils.TimePreference;
 import com.vitaliyhtc.accelerometerfirebase.models.AccelerometerData;
 import com.vitaliyhtc.accelerometerfirebase.models.Device;
@@ -38,8 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-// TODO: 25/04/17  be more specific, what MainService?
-public class MainService extends Service {
+public class AccelerometerDataLoggerService extends Service {
 
     private static final int ONGOING_NOTIFICATION_ID = 0xff;
     private static final int DATA_FILTER_INITIAL_DELAY_IN_MILLISECONDS = 700;
@@ -54,7 +53,7 @@ public class MainService extends Service {
     private Device mDevice;
     private SessionItem mSessionItem;
 
-    private MainService mMainService;
+    private AccelerometerDataLoggerService mAccelerometerDataLoggerService;
     private ScheduledExecutorService mScheduleTaskExecutor;
 
     // Firebase instance variables
@@ -86,7 +85,7 @@ public class MainService extends Service {
         }
         // do work
         runServiceAsForeground();
-        mMainService = this;
+        mAccelerometerDataLoggerService = this;
         performBroadcastReceiverRegistration();
         readSettings();
         initData();
@@ -107,13 +106,13 @@ public class MainService extends Service {
         super.onDestroy();
         isRunning = false;
         if (isInDebugState) {
-            Log.e("MainService", "onDestroy()");
+            Log.e("AccelDataLoggerService", "onDestroy()");
         }
         //release resources here.
     }
 
     private void runServiceAsForeground() {
-        Intent notificationIntent = new Intent(this, MainActivity.class);
+        Intent notificationIntent = new Intent(this, AccelerometerActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         Notification notification;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -291,13 +290,13 @@ public class MainService extends Service {
                 }
                 mScheduleTaskExecutor.shutdown();
                 if (isInDebugState) {
-                    Log.e("MainServiceRunnable", "call mMainService.stopForeground(true)");
+                    Log.e("MainServiceRunnable", "call mAccelerometerDataLoggerService.stopForeground(true)");
                 }
                 stopForeground(true);
                 if (isInDebugState) {
-                    Log.e("MainServiceRunnable", "call mMainService.stopSelf()");
+                    Log.e("MainServiceRunnable", "call mAccelerometerDataLoggerService.stopSelf()");
                 }
-                mMainService.stopSelf();
+                mAccelerometerDataLoggerService.stopSelf();
                 if (isInDebugState) {
                     Log.e("MainServiceRunnable", "stope!");
                 }
