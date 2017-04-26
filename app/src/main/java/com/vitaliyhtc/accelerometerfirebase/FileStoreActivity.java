@@ -3,14 +3,12 @@ package com.vitaliyhtc.accelerometerfirebase;
 import android.content.ClipData;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,7 +21,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -49,6 +46,7 @@ import com.vitaliyhtc.accelerometerfirebase.model.FileInfoOnStorage;
 import com.vitaliyhtc.accelerometerfirebase.model.FileStoreUploadedFiles;
 import com.vitaliyhtc.accelerometerfirebase.model.ProgressItem;
 import com.vitaliyhtc.accelerometerfirebase.model.TaskListeners;
+import com.vitaliyhtc.accelerometerfirebase.utils.FirebaseUtils;
 import com.vitaliyhtc.accelerometerfirebase.utils.Utils;
 import com.vitaliyhtc.accelerometerfirebase.viewholder.FileInfoOnStorageViewHolder;
 
@@ -79,8 +77,6 @@ public class FileStoreActivity extends AppCompatActivity {
 
     private static final String TAG = "FileStoreActivity";
     private static final int REQUEST_CODE_SELECT_FILE = 0x0010;
-    private static final String STORAGE_REFERENCE_FILES = "files";
-    private static final String DATABASE_REFERENCE_FILES = "files";
 
     // same as name of list in FileStoreUploadedFiles
     private static final String DATABASE_REFERENCE_FILE_LIST_NAME = "uploadedFilesInfo";
@@ -101,7 +97,7 @@ public class FileStoreActivity extends AppCompatActivity {
     private Map<UploadTask, TaskListeners<UploadTask.TaskSnapshot>> mUploadTaskListeners;
     private List<FileDownloadTask> mFileDownloadTasks;
     private Map<FileDownloadTask, TaskListeners<FileDownloadTask.TaskSnapshot>> mFileDownloadTaskListeners;
-    private FirebaseRecyclerAdapter<FileInfoOnStorage, FileInfoOnStorageViewHolder> mFirebaseAdapter;
+    private FileInfoOnStorageAdapter mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
     private Map<String, ProgressItem> mProgressMap;
 
@@ -208,31 +204,25 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void requestWriteExternalStoragePermission() {
-        // TODO: 25/04/17 no need to check permissions, just call dexter
-        if (ActivityCompat.checkSelfPermission(FileStoreActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            init();
-            mPermissionsError.setVisibility(View.GONE);
-        } else {
-            Dexter.withActivity(FileStoreActivity.this)
-                    .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    .withListener(new PermissionListener() {
-                        @Override
-                        public void onPermissionGranted(PermissionGrantedResponse response) {
-                            init();
-                            mPermissionsError.setVisibility(View.GONE);
-                        }
+        Dexter.withActivity(FileStoreActivity.this)
+                .withPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        init();
+                        mPermissionsError.setVisibility(View.GONE);
+                    }
 
-                        @Override
-                        public void onPermissionDenied(PermissionDeniedResponse response) {
-                            onPermissionDeniedResume(response);
-                        }
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        onPermissionDeniedResume(response);
+                    }
 
-                        @Override
-                        public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                            onPermissionRationaleShouldBeShownResume(permission, token);
-                        }
-                    }).check();
-        }
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                        onPermissionRationaleShouldBeShownResume(permission, token);
+                    }
+                }).check();
     }
 
     private void onPermissionDeniedResume(PermissionDeniedResponse response) {
@@ -266,14 +256,8 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
     private void initVariables() {
-        // TODO: 25/04/17 create firebase endpoint abstraction get work with firebase storage and firebase database in terms of this application
-//        for example FirebaseHelper.getCurrentUserStoreRef(), etc, ...
-        mStorageReference = FirebaseStorage.getInstance().getReference()
-                .child(STORAGE_REFERENCE_FILES)
-                .child(Utils.getCurrentUserUid());
-        mDatabaseReference = FirebaseDatabase.getInstance().getReference()
-                .child(DATABASE_REFERENCE_FILES)
-                .child(Utils.getCurrentUserUid());
+        mStorageReference = FirebaseUtils.getCurrentUserStoreRef();
+        mDatabaseReference = FirebaseUtils.getCurrentUserDatabaseRef();
 
         mUploadTasks = new ArrayList<>();
         mUploadTaskListeners = new HashMap<>();
@@ -333,14 +317,13 @@ public class FileStoreActivity extends AppCompatActivity {
                 FileInfoOnStorageViewHolder.class,
                 mDatabaseReference.child(DATABASE_REFERENCE_FILE_LIST_NAME));
 
-        // TODO: 25/04/17 why not private FileInfoOnStorageAdapter mFirebaseAdapter?????
-        ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDownloadClickListener(new FileInfoOnStorageViewHolder.DownloadClickListener() {
+        mFirebaseAdapter.setDownloadClickListener(new FileInfoOnStorageViewHolder.DownloadClickListener() {
             @Override
             public void onItemClickDownload(int position) {
                 actionDownloadFile(mFirebaseAdapter.getItem(position));
             }
         });
-        ((FileInfoOnStorageAdapter) mFirebaseAdapter).setDeleteClickListener(new FileInfoOnStorageViewHolder.DeleteClickListener() {
+        mFirebaseAdapter.setDeleteClickListener(new FileInfoOnStorageViewHolder.DeleteClickListener() {
             @Override
             public void onItemClickDelete(int position) {
                 actionDeleteFile(mFirebaseAdapter.getItem(position));
@@ -466,7 +449,6 @@ public class FileStoreActivity extends AppCompatActivity {
             @SuppressWarnings("VisibleForTests")
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                // TODO: 19.04.17 bad code with hashcode. Try to find better solution.
                 updateProgressBar(
                         uploadTask.hashCode() + "",
                         taskSnapshot.getBytesTransferred(),
@@ -509,7 +491,6 @@ public class FileStoreActivity extends AppCompatActivity {
             @SuppressWarnings("VisibleForTests")
             @Override
             public void onProgress(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                // TODO: 19.04.17 bad code with hashcode. Try to find better solution.
                 updateProgressBar(
                         fileDownloadTask.hashCode() + "",
                         taskSnapshot.getBytesTransferred(),
@@ -558,11 +539,11 @@ public class FileStoreActivity extends AppCompatActivity {
     }
 
 
-    private void updateProgressBar(String name, long bytesTransfered, long totalByteCount) {
+    private void updateProgressBar(String name, long bytesTransferred, long totalByteCount) {
         if (!mProgressMap.containsKey(name)) {
-            mProgressMap.put(name, new ProgressItem(name, bytesTransfered, totalByteCount));
+            mProgressMap.put(name, new ProgressItem(name, bytesTransferred, totalByteCount));
         } else {
-            mProgressMap.get(name).setBytesTransfered(bytesTransfered);
+            mProgressMap.get(name).setBytesTransfered(bytesTransferred);
             mProgressMap.get(name).setTotalByteCount(totalByteCount);
         }
         updateProgressBarUi();
@@ -570,13 +551,13 @@ public class FileStoreActivity extends AppCompatActivity {
 
     private void updateProgressBarUi() {
         mProgressBar.setVisibility(View.VISIBLE);
-        long bytesTransfered = 0;
+        long bytesTransferred = 0;
         long totalByteCount = 0;
         for (ProgressItem progressItem : mProgressMap.values()) {
-            bytesTransfered += progressItem.getBytesTransfered();
+            bytesTransferred += progressItem.getBytesTransfered();
             totalByteCount += progressItem.getTotalByteCount();
         }
-        int progress = (int) ((100 * bytesTransfered) / totalByteCount);
+        int progress = (int) ((100 * bytesTransferred) / totalByteCount);
         mProgressBar.setProgress(progress);
         if (progress == 100) {
             mProgressBar.setVisibility(View.GONE);

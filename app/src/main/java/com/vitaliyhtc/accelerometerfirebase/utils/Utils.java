@@ -4,8 +4,6 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -14,7 +12,6 @@ public abstract class Utils {
     private Utils() {
         throw new AssertionError();
     }
-
 
 
     public static boolean isNetworkAvailable(Context context) {
@@ -33,10 +30,6 @@ public abstract class Utils {
         return formatter.format(calendar.getTime());
     }
 
-    public static String getCurrentUserUid() {
-        return FirebaseAuth.getInstance().getCurrentUser().getUid();
-    }
-
     // http://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
     // https://en.wikipedia.org/wiki/Kilobyte
     // modified.
@@ -44,7 +37,7 @@ public abstract class Utils {
         int unit = 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = "KMGTPE".charAt(exp-1)+"";
+        String pre = "KMGTPE".charAt(exp - 1) + "";
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 }
