@@ -61,7 +61,10 @@ public class SessionItemsDataAdapter extends FirebaseRecyclerAdapter<SessionItem
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mClickListener.onItemClick(getAdapterPosition());
+                    int adapterPosition = getAdapterPosition();
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        mClickListener.onItemClick(getAdapterPosition());
+                    }
                 }
             });
         }
@@ -70,7 +73,7 @@ public class SessionItemsDataAdapter extends FirebaseRecyclerAdapter<SessionItem
             mClickListener = clickListener;
         }
 
-        void bind(SessionItem model){
+        void bind(SessionItem model) {
             startTimeStampTextView.setText(Utils.getDate(model.getStartTime(), DATE_TIME_FULL_FORMAT));
             stopTimeTextView.setText(Utils.getDate(model.getStopTime(), TIME_FULL_FORMAT));
             deviceModelTextView.setText(model.getDeviceInfo().getModel());
